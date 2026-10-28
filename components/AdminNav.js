@@ -2,23 +2,32 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  CalendarIcon,
+  BuildingIcon,
+  UsersIcon,
+  BookOpenIcon,
+  LayersIcon,
+  SettingsIcon,
+  ShieldCheckIcon,
+} from "./Icons";
 
 export default function AdminNav() {
   const pathname = usePathname();
 
   const links = [
-    { name: "Overview", href: "/admin" },
-    { name: "Departments", href: "/admin/departments" },
-    { name: "Classes", href: "/admin/classes" },
-    { name: "Courses", href: "/admin/courses" },
-    { name: "Halls", href: "/admin/halls" },
-    { name: "Timetables", href: "/admin/timetables" },
-    { name: "Settings", href: "/admin/settings" },
+    { name: "Overview", href: "/admin", icon: <ShieldCheckIcon className="w-4 h-4" /> },
+    { name: "Timetables", href: "/admin/timetables", icon: <CalendarIcon className="w-4 h-4" /> },
+    { name: "Departments", href: "/admin/departments", icon: <LayersIcon className="w-4 h-4" /> },
+    { name: "Classes", href: "/admin/classes", icon: <UsersIcon className="w-4 h-4" /> },
+    { name: "Courses", href: "/admin/courses", icon: <BookOpenIcon className="w-4 h-4" /> },
+    { name: "Halls", href: "/admin/halls", icon: <BuildingIcon className="w-4 h-4" /> },
+    { name: "Settings", href: "/admin/settings", icon: <SettingsIcon className="w-4 h-4" /> },
   ];
 
   return (
-    <div className="bg-white border-b border-slate-200 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-6">
-      <div className="flex space-x-1 sm:space-x-4 overflow-x-auto py-2">
+    <div className="bg-white border-b border-slate-200 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 mb-8 sticky top-18 z-30 shadow-xs">
+      <div className="flex space-x-1 sm:space-x-2 overflow-x-auto py-2.5 no-scrollbar">
         {links.map((link) => {
           const isActive =
             link.href === "/admin"
@@ -29,13 +38,14 @@ export default function AdminNav() {
             <Link
               key={link.href}
               href={link.href}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
                 isActive
-                  ? "bg-blue-900 text-white"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                  ? "bg-blue-900 text-white shadow-xs"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
               }`}
             >
-              {link.name}
+              <span>{link.icon}</span>
+              <span>{link.name}</span>
             </Link>
           );
         })}

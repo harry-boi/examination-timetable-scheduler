@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { SettingsIcon, CheckCircleIcon } from "@/components/Icons";
 
 export default function SettingsPage() {
   const [maxClasses, setMaxClasses] = useState(3);
@@ -41,7 +42,7 @@ export default function SettingsPage() {
 
     const parsedVal = parseInt(maxClasses, 10);
     if (isNaN(parsedVal) || parsedVal < 1) {
-      setErrorMessage("Maximum classes per hall must be a positive integer (at least 1).");
+      setErrorMessage("Maximum classes per hall must be a positive number of at least 1.");
       return;
     }
 
@@ -79,59 +80,68 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">System Settings</h1>
-        <p className="text-sm text-slate-600">
-          Configure institutional scheduling rules and hall allocation thresholds.
+        <h1 className="text-2xl font-bold text-slate-900 flex items-center space-x-2">
+          <SettingsIcon className="w-6 h-6 text-slate-800" />
+          <span>System Conflict Settings</span>
+        </h1>
+        <p className="text-sm text-slate-600 mt-0.5">
+          Configure institutional scheduling rules and hall-sharing thresholds.
         </p>
       </div>
 
       {/* Alert Messages */}
       {errorMessage && (
-        <div className="p-4 bg-red-50 text-red-800 border border-red-200 rounded-lg text-sm flex justify-between items-center">
+        <div className="p-4 bg-rose-50 text-rose-900 border border-rose-200 rounded-xl text-sm flex justify-between items-center shadow-xs">
           <span>{errorMessage}</span>
-          <button onClick={() => setErrorMessage("")} className="font-bold ml-4">&times;</button>
+          <button onClick={() => setErrorMessage("")} className="font-bold ml-4 hover:opacity-75">&times;</button>
         </div>
       )}
       {successMessage && (
-        <div className="p-4 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-sm flex justify-between items-center">
+        <div className="p-4 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-xl text-sm flex justify-between items-center shadow-xs">
           <span>{successMessage}</span>
-          <button onClick={() => setSuccessMessage("")} className="font-bold ml-4">&times;</button>
+          <button onClick={() => setSuccessMessage("")} className="font-bold ml-4 hover:opacity-75">&times;</button>
         </div>
       )}
 
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm max-w-xl">
-        <h2 className="text-base font-semibold text-slate-900 mb-4">
-          Hall Sharing Thresholds
+      <div className="bg-white p-7 sm:p-8 rounded-2xl border border-slate-200/90 shadow-2xs max-w-xl">
+        <h2 className="text-base font-bold text-slate-900 mb-2">
+          Examination Hall Sharing Threshold
         </h2>
+        <p className="text-xs text-slate-600 mb-6 leading-relaxed">
+          The school policy allows multiple classes to share a hall up to a designated limit.
+          When overlapping examination papers in the same hall exceed this limit, a <strong>Hall Clash</strong> will be raised.
+        </p>
 
         {loading ? (
           <p className="text-slate-500 text-sm">Loading settings...</p>
         ) : (
-          <form onSubmit={handleSave} className="space-y-4">
+          <form onSubmit={handleSave} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Maximum Number of Classes Per Hall
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                Maximum Classes Allowed per Hall
               </label>
-              <input
-                type="number"
-                min="1"
-                value={maxClasses}
-                onChange={(e) => setMaxClasses(e.target.value)}
-                required
-                className="w-full sm:w-48 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-900"
-              />
-              <p className="mt-2 text-xs text-slate-500 leading-relaxed">
-                Default is 3. If exam papers in the same hall overlap in time and exceed this number of distinct classes, a <strong>Hall Clash</strong> conflict will be flagged.
-              </p>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={maxClasses}
+                  onChange={(e) => setMaxClasses(e.target.value)}
+                  required
+                  className="w-32 px-3.5 py-2.5 border border-slate-300 rounded-xl text-base font-bold font-mono text-center focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+                />
+                <span className="text-xs text-slate-500">classes concurrently (Default: 3)</span>
+              </div>
             </div>
 
             <div className="pt-2">
               <button
                 type="submit"
                 disabled={saving}
-                className="px-5 py-2 bg-blue-900 hover:bg-blue-800 disabled:bg-blue-300 text-white rounded-lg text-sm font-semibold transition shadow-sm"
+                className="px-6 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-blue-300 text-white rounded-xl text-sm font-bold transition shadow-xs flex items-center space-x-2"
               >
-                {saving ? "Saving..." : "Save Settings"}
+                <CheckCircleIcon className="w-4 h-4 text-emerald-300" />
+                <span>{saving ? "Saving..." : "Save Configuration"}</span>
               </button>
             </div>
           </form>
