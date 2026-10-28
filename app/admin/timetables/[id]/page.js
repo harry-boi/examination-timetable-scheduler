@@ -4,6 +4,7 @@ import { useEffect, useState, use } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { checkAllConflicts } from "@/lib/conflicts";
+import { getExamPeriod, formatPeriodRange } from "@/lib/timeUtils";
 import {
   CalendarIcon,
   ClockIcon,
@@ -45,7 +46,7 @@ export default function TimetableDetailPage({ params }) {
   const [selectedHallId, setSelectedHallId] = useState("");
   const [examDate, setExamDate] = useState("");
   const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("11:30");
+  const [endTime, setEndTime] = useState("12:00");
 
   // Conflict warning confirmation modal
   const [conflictWarningModal, setConflictWarningModal] = useState(null);
@@ -55,8 +56,8 @@ export default function TimetableDetailPage({ params }) {
   const [suggestStartDate, setSuggestStartDate] = useState("");
   const [suggestEndDate, setSuggestEndDate] = useState("");
   const [suggestPeriods, setSuggestPeriods] = useState([
-    { start: "08:30", end: "11:30" },
-    { start: "12:30", end: "15:30" },
+    { start: "09:00", end: "12:00" }, // Morning period
+    { start: "13:00", end: "16:00" }, // Afternoon period
   ]);
   const [suggestions, setSuggestions] = useState(null);
   const [unplacedCourses, setUnplacedCourses] = useState([]);
@@ -191,7 +192,7 @@ export default function TimetableDetailPage({ params }) {
     setSelectedHallId(halls[0]?.id || "");
     setExamDate(examDate || new Date().toISOString().split("T")[0]);
     setStartTime("09:00");
-    setEndTime("11:30");
+    setEndTime("12:00");
     setErrorMessage("");
     setShowModal(true);
   };
@@ -708,8 +709,25 @@ export default function TimetableDetailPage({ params }) {
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 font-mono font-bold text-slate-700 whitespace-nowrap border border-slate-300">
-                        {item.start_time?.slice(0, 5)} &ndash; {item.end_time?.slice(0, 5)}
+                      <td className="px-4 py-3 whitespace-nowrap border border-slate-300">
+                        {(() => {
+                          const period = getExamPeriod(item.start_time);
+                          const time12 = formatPeriodRange(item.start_time, item.end_time);
+                          return (
+                            <div className="space-y-1">
+                              <span className={`inline-flex items-center space-x-1 text-[11px] font-bold px-2 py-0.5 rounded-md ${period.badgeClass}`}>
+                                <span>{period.icon}</span>
+                                <span>{period.name}</span>
+                              </span>
+                              <div className="font-mono text-xs font-bold text-slate-800">
+                                {time12}
+                              </div>
+                              <div className="text-[10px] text-slate-400 font-mono print:hidden">
+                                {item.start_time?.slice(0, 5)} &ndash; {item.end_time?.slice(0, 5)}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-4 py-3 font-mono font-black text-blue-900 print:text-black whitespace-nowrap border border-slate-300">
                         {item.courses?.code}
@@ -825,6 +843,52 @@ export default function TimetableDetailPage({ params }) {
                   required
                   className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
                 />
+              </div>
+
+              {/* Morning / Afternoon Quick Preset Selection */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Exam Period / Session
+                </label>
+                <div className="grid grid-cols-2 gap-3 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStartTime("09:00");
+                      setEndTime("12:00");
+                    }}
+                    className={`p-3 rounded-xl border text-left transition-all flex flex-col ${
+                      startTime === "09:00" && endTime === "12:00"
+                        ? "border-amber-500 bg-amber-50/80 text-amber-950 ring-2 ring-amber-400/40 shadow-xs"
+                        : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700"
+                    }`}
+                  >
+                    <span className="font-bold text-xs flex items-center space-x-1.5">
+                      <span>☀️</span>
+                      <span>Morning Session</span>
+                    </span>
+                    <span className="text-[11px] text-slate-500 font-mono mt-0.5">9:00 AM &ndash; 12:00 PM</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStartTime("13:00");
+                      setEndTime("16:00");
+                    }}
+                    className={`p-3 rounded-xl border text-left transition-all flex flex-col ${
+                      startTime === "13:00" && endTime === "16:00"
+                        ? "border-indigo-500 bg-indigo-50/80 text-indigo-950 ring-2 ring-indigo-400/40 shadow-xs"
+                        : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700"
+                    }`}
+                  >
+                    <span className="font-bold text-xs flex items-center space-x-1.5">
+                      <span>🌤️</span>
+                      <span>Afternoon Session</span>
+                    </span>
+                    <span className="text-[11px] text-slate-500 font-mono mt-0.5">1:00 PM &ndash; 4:00 PM</span>
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

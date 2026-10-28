@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { getExamPeriod, formatPeriodRange } from "@/lib/timeUtils";
 import {
   CalendarIcon,
   PrinterIcon,
@@ -24,6 +25,7 @@ export default function PublicTimetablesPage() {
   const [selectedDepartmentId, setSelectedDepartmentId] = useState("ALL");
   const [selectedLevel, setSelectedLevel] = useState("ALL");
   const [selectedHall, setSelectedHall] = useState("ALL");
+  const [selectedSession, setSelectedSession] = useState("ALL"); // ALL, MORNING, AFTERNOON
 
   const [exams, setExams] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -134,9 +136,19 @@ export default function PublicTimetablesPage() {
     new Set(exams.map((e) => e.halls?.name).filter(Boolean))
   ).sort();
 
-  // Search and hall filter
+  // Search and session/hall filter
   const filteredExams = exams.filter((e) => {
+    // Hall filter
     if (selectedHall !== "ALL" && e.halls?.name !== selectedHall) {
+      return false;
+    }
+
+    // Morning / Afternoon Session filter
+    const startHour = parseInt(String(e.start_time).split(":")[0], 10);
+    if (selectedSession === "MORNING" && startHour >= 12) {
+      return false;
+    }
+    if (selectedSession === "AFTERNOON" && startHour < 12) {
       return false;
     }
 
@@ -188,7 +200,7 @@ export default function PublicTimetablesPage() {
               <span>Examination Timetable</span>
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-slate-600">
-              Browse the complete school-wide examination schedule, or filter by your specific department, class level, or hall.
+              Browse the complete school-wide examination schedule, or filter by your specific department, class level, hall, or session.
             </p>
           </div>
 
@@ -214,7 +226,7 @@ export default function PublicTimetablesPage() {
 
         {/* Filter Controls Card */}
         <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Timetable Selector */}
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
@@ -251,7 +263,7 @@ export default function PublicTimetablesPage() {
                 onChange={(e) => setSelectedDepartmentId(e.target.value)}
                 className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm bg-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
               >
-                <option value="ALL">🏛️ All Departments (Master Notice Board View)</option>
+                <option value="ALL">🏛️ All Departments (Master View)</option>
                 {departments.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.code} - {d.name}
@@ -278,12 +290,28 @@ export default function PublicTimetablesPage() {
                 onChange={(e) => setSelectedLevel(e.target.value)}
                 className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm bg-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
               >
-                <option value="ALL">🎓 All Levels (ND 1, ND 2, HND 1, HND 2)</option>
+                <option value="ALL">🎓 All Levels (ND 1 &ndash; HND 2)</option>
                 {POLY_LEVELS.map((lvl) => (
                   <option key={lvl} value={lvl}>
                     {lvl}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            {/* Morning / Afternoon Session Selector */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Session / Period
+              </label>
+              <select
+                value={selectedSession}
+                onChange={(e) => setSelectedSession(e.target.value)}
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm bg-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+              >
+                <option value="ALL">☀️ &amp; 🌤️ All (Morning &amp; Afternoon)</option>
+                <option value="MORNING">☀️ Morning Only (9am &ndash; 12pm)</option>
+                <option value="AFTERNOON">🌤️ Afternoon Only (1pm &ndash; 4pm)</option>
               </select>
             </div>
 
@@ -298,7 +326,7 @@ export default function PublicTimetablesPage() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Code, course title, hall..."
+                  placeholder="Code, course, hall..."
                   className="w-full pl-9 pr-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
                 />
               </div>
@@ -316,6 +344,16 @@ export default function PublicTimetablesPage() {
               ) : (
                 <span className="px-2.5 py-1 bg-amber-100 text-amber-900 font-bold rounded-lg border border-amber-200">
                   Filtered: {activeDepartment ? activeDepartment.code : "All Depts"} &bull; {selectedLevel !== "ALL" ? selectedLevel : "All Levels"}
+                </span>
+              )}
+
+              {selectedSession !== "ALL" && (
+                <span className={`px-2.5 py-1 rounded-lg font-bold border ${
+                  selectedSession === "MORNING"
+                    ? "bg-amber-50 text-amber-900 border-amber-200"
+                    : "bg-indigo-50 text-indigo-900 border-indigo-200"
+                }`}>
+                  {selectedSession === "MORNING" ? "☀️ Morning Session Only (9:00 AM – 12:00 PM)" : "🌤️ Afternoon Session Only (1:00 PM – 4:00 PM)"}
                 </span>
               )}
 
@@ -378,6 +416,7 @@ export default function PublicTimetablesPage() {
             </h3>
             <p className="text-xs sm:text-sm font-bold text-slate-800 mt-0.5">
               {activeTimetable?.title || "Examination Timetable"} &bull; Session: {activeTimetable?.session} ({activeTimetable?.semester})
+              {selectedSession !== "ALL" && ` • ${selectedSession === "MORNING" ? "MORNING PAPERS (9AM – 12PM)" : "AFTERNOON PAPERS (1PM – 4PM)"}`}
               {selectedHall !== "ALL" && ` • Venue: ${selectedHall}`}
             </p>
           </div>
@@ -403,61 +442,149 @@ export default function PublicTimetablesPage() {
                 day: "numeric",
               });
 
+              // Subdivide into Morning and Afternoon papers
+              const morningExams = dateExams.filter((e) => parseInt(String(e.start_time).split(":")[0], 10) < 12);
+              const afternoonExams = dateExams.filter((e) => parseInt(String(e.start_time).split(":")[0], 10) >= 12);
+
               return (
-                <div key={dateStr} className="space-y-3">
-                  <div className="flex items-center space-x-3 bg-blue-900 text-white px-4 py-2 rounded-xl print:bg-slate-200 print:text-black">
-                    <CalendarIcon className="w-4 h-4 text-amber-300 print:text-black shrink-0" />
-                    <span className="font-black text-xs sm:text-sm tracking-wide uppercase">
-                      {formattedDate} ({dateStr}) &mdash; {dateExams.length} {dateExams.length === 1 ? "Paper" : "Papers"}
-                    </span>
+                <div key={dateStr} className="space-y-4">
+                  {/* Day Banner */}
+                  <div className="flex items-center justify-between bg-slate-900 text-white px-4 py-2.5 rounded-xl print:bg-slate-200 print:text-black">
+                    <div className="flex items-center space-x-2">
+                      <CalendarIcon className="w-4 h-4 text-amber-300 print:text-black shrink-0" />
+                      <span className="font-black text-xs sm:text-sm tracking-wide uppercase">
+                        {formattedDate} ({dateStr})
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-xs font-semibold">
+                      {morningExams.length > 0 && (
+                        <span className="px-2 py-0.5 bg-amber-500/20 text-amber-300 print:text-black rounded">
+                          ☀️ {morningExams.length} Morning
+                        </span>
+                      )}
+                      {afternoonExams.length > 0 && (
+                        <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 print:text-black rounded">
+                          🌤️ {afternoonExams.length} Afternoon
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-slate-300 text-sm print:text-xs border border-slate-300">
-                      <thead className="bg-slate-100 text-slate-900 font-bold text-left print:bg-slate-150">
-                        <tr>
-                          <th className="px-3.5 py-2.5 border border-slate-300 w-32">Period (Time)</th>
-                          <th className="px-3.5 py-2.5 border border-slate-300 w-28">Course Code</th>
-                          <th className="px-3.5 py-2.5 border border-slate-300">Course Title</th>
-                          <th className="px-3.5 py-2.5 border border-slate-300 w-32">Offering Class</th>
-                          <th className="px-3.5 py-2.5 border border-slate-300 w-36">Hall Venue</th>
-                          <th className="px-3.5 py-2.5 border border-slate-300 text-center w-24">Students</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200">
-                        {dateExams.map((item, idx) => {
-                          const deptCode = item.courses?.classes?.departments?.code || "DEPT";
-                          const level = item.courses?.classes?.level || "";
-                          const className = `${deptCode} ${level}`;
-
-                          return (
-                            <tr key={item.id} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"}>
-                              <td className="px-3.5 py-2.5 font-mono font-bold text-slate-800 whitespace-nowrap border border-slate-300">
-                                {item.start_time?.slice(0, 5)} &ndash; {item.end_time?.slice(0, 5)}
-                              </td>
-                              <td className="px-3.5 py-2.5 font-mono font-black text-blue-900 print:text-black whitespace-nowrap border border-slate-300">
-                                {item.courses?.code}
-                              </td>
-                              <td className="px-3.5 py-2.5 text-slate-900 font-medium border border-slate-300">
-                                {item.courses?.title}
-                              </td>
-                              <td className="px-3.5 py-2.5 whitespace-nowrap border border-slate-300">
-                                <span className="px-2 py-0.5 bg-slate-100 print:bg-transparent text-slate-900 rounded font-bold text-xs">
-                                  {className}
-                                </span>
-                              </td>
-                              <td className="px-3.5 py-2.5 font-bold text-slate-900 whitespace-nowrap border border-slate-300">
-                                {item.halls?.name}
-                              </td>
-                              <td className="px-3.5 py-2.5 text-center font-mono font-bold text-slate-800 border border-slate-300">
-                                {item.courses?.classes?.student_count || 0}
-                              </td>
+                  {/* Morning Session Table (if any) */}
+                  {morningExams.length > 0 && (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center space-x-2 px-1 text-xs font-bold text-amber-950 uppercase tracking-wider">
+                        <span>☀️</span>
+                        <span>Morning Session &bull; 9:00 AM &ndash; 12:00 PM</span>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-slate-300 text-sm print:text-xs border border-slate-300">
+                          <thead className="bg-amber-50/70 text-amber-950 font-bold text-left print:bg-slate-150 print:text-black">
+                            <tr>
+                              <th className="px-3.5 py-2 border border-slate-300 w-36">Session / Time</th>
+                              <th className="px-3.5 py-2 border border-slate-300 w-28">Course Code</th>
+                              <th className="px-3.5 py-2 border border-slate-300">Course Title</th>
+                              <th className="px-3.5 py-2 border border-slate-300 w-32">Offering Class</th>
+                              <th className="px-3.5 py-2 border border-slate-300 w-36">Hall Venue</th>
+                              <th className="px-3.5 py-2 border border-slate-300 text-center w-24">Students</th>
                             </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                          </thead>
+                          <tbody className="divide-y divide-slate-200">
+                            {morningExams.map((item, idx) => {
+                              const deptCode = item.courses?.classes?.departments?.code || "DEPT";
+                              const level = item.courses?.classes?.level || "";
+                              const className = `${deptCode} ${level}`;
+                              const time12 = formatPeriodRange(item.start_time, item.end_time);
+
+                              return (
+                                <tr key={item.id} className={idx % 2 === 0 ? "bg-white" : "bg-amber-50/20"}>
+                                  <td className="px-3.5 py-2 whitespace-nowrap border border-slate-300">
+                                    <div className="font-bold text-amber-950 text-xs">☀️ Morning Paper</div>
+                                    <div className="font-mono text-xs font-bold text-slate-800">{time12}</div>
+                                  </td>
+                                  <td className="px-3.5 py-2 font-mono font-black text-blue-900 print:text-black whitespace-nowrap border border-slate-300">
+                                    {item.courses?.code}
+                                  </td>
+                                  <td className="px-3.5 py-2 text-slate-900 font-medium border border-slate-300">
+                                    {item.courses?.title}
+                                  </td>
+                                  <td className="px-3.5 py-2 whitespace-nowrap border border-slate-300">
+                                    <span className="px-2 py-0.5 bg-slate-100 print:bg-transparent text-slate-900 rounded font-bold text-xs">
+                                      {className}
+                                    </span>
+                                  </td>
+                                  <td className="px-3.5 py-2 font-bold text-slate-900 whitespace-nowrap border border-slate-300">
+                                    {item.halls?.name}
+                                  </td>
+                                  <td className="px-3.5 py-2 text-center font-mono font-bold text-slate-800 border border-slate-300">
+                                    {item.courses?.classes?.student_count || 0}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Afternoon Session Table (if any) */}
+                  {afternoonExams.length > 0 && (
+                    <div className="space-y-1.5 pt-2">
+                      <div className="flex items-center space-x-2 px-1 text-xs font-bold text-indigo-950 uppercase tracking-wider">
+                        <span>🌤️</span>
+                        <span>Afternoon Session &bull; 1:00 PM &ndash; 4:00 PM</span>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-slate-300 text-sm print:text-xs border border-slate-300">
+                          <thead className="bg-indigo-50/70 text-indigo-950 font-bold text-left print:bg-slate-150 print:text-black">
+                            <tr>
+                              <th className="px-3.5 py-2 border border-slate-300 w-36">Session / Time</th>
+                              <th className="px-3.5 py-2 border border-slate-300 w-28">Course Code</th>
+                              <th className="px-3.5 py-2 border border-slate-300">Course Title</th>
+                              <th className="px-3.5 py-2 border border-slate-300 w-32">Offering Class</th>
+                              <th className="px-3.5 py-2 border border-slate-300 w-36">Hall Venue</th>
+                              <th className="px-3.5 py-2 border border-slate-300 text-center w-24">Students</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-200">
+                            {afternoonExams.map((item, idx) => {
+                              const deptCode = item.courses?.classes?.departments?.code || "DEPT";
+                              const level = item.courses?.classes?.level || "";
+                              const className = `${deptCode} ${level}`;
+                              const time12 = formatPeriodRange(item.start_time, item.end_time);
+
+                              return (
+                                <tr key={item.id} className={idx % 2 === 0 ? "bg-white" : "bg-indigo-50/20"}>
+                                  <td className="px-3.5 py-2 whitespace-nowrap border border-slate-300">
+                                    <div className="font-bold text-indigo-950 text-xs">🌤️ Afternoon Paper</div>
+                                    <div className="font-mono text-xs font-bold text-slate-800">{time12}</div>
+                                  </td>
+                                  <td className="px-3.5 py-2 font-mono font-black text-blue-900 print:text-black whitespace-nowrap border border-slate-300">
+                                    {item.courses?.code}
+                                  </td>
+                                  <td className="px-3.5 py-2 text-slate-900 font-medium border border-slate-300">
+                                    {item.courses?.title}
+                                  </td>
+                                  <td className="px-3.5 py-2 whitespace-nowrap border border-slate-300">
+                                    <span className="px-2 py-0.5 bg-slate-100 print:bg-transparent text-slate-900 rounded font-bold text-xs">
+                                      {className}
+                                    </span>
+                                  </td>
+                                  <td className="px-3.5 py-2 font-bold text-slate-900 whitespace-nowrap border border-slate-300">
+                                    {item.halls?.name}
+                                  </td>
+                                  <td className="px-3.5 py-2 text-center font-mono font-bold text-slate-800 border border-slate-300">
+                                    {item.courses?.classes?.student_count || 0}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -469,7 +596,7 @@ export default function PublicTimetablesPage() {
               <thead className="bg-slate-100 text-slate-900 font-bold text-left print:bg-slate-200">
                 <tr>
                   <th className="px-4 py-3 border border-slate-300">Date</th>
-                  <th className="px-4 py-3 border border-slate-300">Period (Time)</th>
+                  <th className="px-4 py-3 border border-slate-300">Session &bull; Period (Time)</th>
                   <th className="px-4 py-3 border border-slate-300">Course Code</th>
                   <th className="px-4 py-3 border border-slate-300">Course Title</th>
                   <th className="px-4 py-3 border border-slate-300">Offering Class</th>
@@ -482,14 +609,20 @@ export default function PublicTimetablesPage() {
                   const deptCode = item.courses?.classes?.departments?.code || "DEPT";
                   const level = item.courses?.classes?.level || "";
                   const className = `${deptCode} ${level}`;
+                  const period = getExamPeriod(item.start_time);
+                  const time12 = formatPeriodRange(item.start_time, item.end_time);
 
                   return (
                     <tr key={item.id} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"}>
                       <td className="px-4 py-3 font-bold text-slate-900 whitespace-nowrap border border-slate-300">
                         {item.exam_date}
                       </td>
-                      <td className="px-4 py-3 font-mono text-slate-800 whitespace-nowrap border border-slate-300">
-                        {item.start_time?.slice(0, 5)} &ndash; {item.end_time?.slice(0, 5)}
+                      <td className="px-4 py-3 whitespace-nowrap border border-slate-300">
+                        <span className={`inline-flex items-center space-x-1 text-[11px] font-bold px-2 py-0.5 rounded ${period.badgeClass}`}>
+                          <span>{period.icon}</span>
+                          <span>{period.session}</span>
+                        </span>
+                        <div className="font-mono text-xs font-bold text-slate-800 mt-0.5">{time12}</div>
                       </td>
                       <td className="px-4 py-3 font-mono font-black text-blue-900 print:text-black whitespace-nowrap border border-slate-300">
                         {item.courses?.code}
@@ -520,9 +653,10 @@ export default function PublicTimetablesPage() {
         <div className="hidden print:flex justify-between items-end mt-12 pt-6 text-xs text-slate-700 border-t border-slate-400">
           <div className="text-left space-y-1">
             <p className="font-bold">Instructions to Candidates &amp; Invigilators:</p>
-            <p>1. Candidates must arrive at their designated examination hall 30 minutes before the scheduled time.</p>
-            <p>2. Presentation of a valid student identity card and examination clearance card is strictly mandatory.</p>
-            <p>3. No mobile phones, smartwatches, or unauthorized study materials are permitted in the halls.</p>
+            <p>1. Morning papers commence at 9:00 AM; Afternoon papers commence at 1:00 PM prompt.</p>
+            <p>2. Candidates must arrive at their designated examination hall 30 minutes before the scheduled start time.</p>
+            <p>3. Presentation of a valid student identity card and examination clearance card is strictly mandatory.</p>
+            <p>4. No mobile phones, smartwatches, or unauthorized study materials are permitted in the halls.</p>
           </div>
           <div className="text-right space-y-10">
             <div>___________________________________________________</div>
