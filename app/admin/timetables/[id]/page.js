@@ -55,6 +55,8 @@ export default function TimetableDetailPage({ params }) {
   const [showSuggestModal, setShowSuggestModal] = useState(false);
   const [suggestStartDate, setSuggestStartDate] = useState("");
   const [suggestEndDate, setSuggestEndDate] = useState("");
+  const [suggestDistributionMode, setSuggestDistributionMode] = useState("SPREAD"); // "SPREAD" or "BALANCED_DAILY"
+  const [suggestMinGapDays, setSuggestMinGapDays] = useState(1); // 1 or 2 or 0
   const [suggestPeriods, setSuggestPeriods] = useState([
     { start: "09:00", end: "12:00" }, // Morning period
     { start: "13:00", end: "16:00" }, // Afternoon period
@@ -353,10 +355,15 @@ export default function TimetableDetailPage({ params }) {
     setSubmitting(false);
   };
 
-  // Auto-Scheduler Algorithm
+  // Auto-Scheduler Algorithm with Load Balancing, Spacing, and Weekday-only Enforcement
   const runAutoScheduler = () => {
     if (!suggestStartDate || !suggestEndDate) {
       setErrorMessage("Please select both a start date and an end date for scheduling.");
+      return;
+    }
+
+    if (suggestStartDate > suggestEndDate) {
+      setErrorMessage("Start date cannot be after end date.");
       return;
     }
 
@@ -368,78 +375,181 @@ export default function TimetableDetailPage({ params }) {
       return;
     }
 
+    // STRICT POLYTECHNIC RULE: Monday to Friday only (exclude Saturdays & Sundays)
+    const [sY, sM, sD] = suggestStartDate.split("-").map(Number);
+    let cur = new Date(sY, sM - 1, sD);
+    const [eY, eM, eD] = suggestEndDate.split("-").map(Number);
+    const end = new Date(eY, eM - 1, eD);
+
     const dates = [];
-    let cur = new Date(suggestStartDate);
-    const end = new Date(suggestEndDate);
     while (cur <= end) {
-      if (cur.getDay() !== 0) {
-        dates.push(cur.toISOString().split("T")[0]);
+      const dayOfWeek = cur.getDay();
+      // 0 = Sunday, 6 = Saturday -> Never schedule school activities or exams on weekends
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        const y = cur.getFullYear();
+        const m = String(cur.getMonth() + 1).padStart(2, "0");
+        const d = String(cur.getDate()).padStart(2, "0");
+        dates.push(`${y}-${m}-${d}`);
       }
       cur.setDate(cur.getDate() + 1);
     }
 
     if (dates.length === 0) {
-      setErrorMessage("No valid dates found in the chosen date range.");
+      setErrorMessage("No valid weekdays (Monday through Friday) found in the chosen date range.");
       return;
+    }
+
+    // Group courses by class
+    const classCoursesMap = {};
+    for (const crs of unscheduled) {
+      const cId = crs.class_id || "general";
+      if (!classCoursesMap[cId]) classCoursesMap[cId] = [];
+      classCoursesMap[cId].push(crs);
+    }
+
+    // Interleave courses round-robin across classes so classes are scheduled in parallel
+    const orderedCourses = [];
+    const classIds = Object.keys(classCoursesMap);
+    const maxLen = Math.max(...classIds.map((id) => classCoursesMap[id].length));
+    for (let i = 0; i < maxLen; i++) {
+      for (const id of classIds) {
+        if (classCoursesMap[id][i]) orderedCourses.push(classCoursesMap[id][i]);
+      }
     }
 
     const newSuggestions = [];
     const unplaced = [];
     let runningSchedule = [...normalizedExams];
 
-    for (const crs of unscheduled) {
+    // Compute ideal stride target index for each course if in SPREAD mode
+    const totalToPlace = orderedCourses.length;
+    const strideStep = dates.length > totalToPlace ? dates.length / totalToPlace : 1;
+
+    for (let cIdx = 0; cIdx < orderedCourses.length; cIdx++) {
+      const crs = orderedCourses[cIdx];
       const deptCode = crs.classes?.departments?.code || "";
       const level = crs.classes?.level || "";
       const className = deptCode && level ? `${deptCode} ${level}` : "Unknown Class";
 
-      let placed = false;
+      // Calculate ideal target date index for spreading
+      const targetDateIdx =
+        suggestDistributionMode === "SPREAD"
+          ? Math.min(dates.length - 1, Math.round(cIdx * strideStep))
+          : 0;
 
-      outerLoop:
-      for (const d of dates) {
-        for (const period of suggestPeriods) {
-          for (const h of halls) {
-            const candidate = {
-              id: `suggest-${crs.id}`,
-              course_id: crs.id,
-              course: crs.code,
-              course_title: crs.title,
-              class: className,
-              class_id: crs.class_id,
-              student_count: crs.classes?.student_count || 0,
-              hall: h.name,
-              hall_id: h.id,
-              hall_capacity: h.capacity ?? null,
-              date: d,
-              start_time: period.start,
-              end_time: period.end,
-            };
+      let bestCandidate = null;
+      let lowestPenalty = Infinity;
 
-            const testList = [...runningSchedule, candidate];
-            const candidateConflicts = checkAllConflicts(testList, {
-              maxClassesPerHall: settings.max_classes_per_hall || 3,
-            });
+      // First pass: with strict minGapDays and max 1 exam per class per day
+      // Fallback pass: if tight, allow consecutive days (minGap = 0), still max 1 exam per day
+      const tryPasses = [
+        { minGap: suggestMinGapDays, maxPerDay: 1 },
+        { minGap: 0, maxPerDay: 1 },
+      ];
 
-            const hasConflict = candidateConflicts.some((c) =>
-              c.entries?.some((e) => e.id === candidate.id)
-            );
+      passLoop:
+      for (const pass of tryPasses) {
+        // Iterate through all available weekdays
+        for (let dIdx = 0; dIdx < dates.length; dIdx++) {
+          const d = dates[dIdx];
 
-            if (!hasConflict) {
-              runningSchedule.push(candidate);
-              newSuggestions.push(candidate);
-              placed = true;
-              break outerLoop;
+          // Constraint 1: A class writes at most 1 paper on any given date
+          const classExamsOnDate = runningSchedule.filter(
+            (e) => e.class_id === crs.class_id && e.date === d
+          ).length;
+          if (classExamsOnDate >= pass.maxPerDay) {
+            continue;
+          }
+
+          // Check gap to other scheduled exams for this class
+          let gapPenalty = 0;
+          if (pass.minGap > 0) {
+            const classOtherExams = runningSchedule.filter((e) => e.class_id === crs.class_id);
+            for (const other of classOtherExams) {
+              const otherIdx = dates.indexOf(other.date);
+              if (otherIdx >= 0) {
+                const distance = Math.abs(dIdx - otherIdx);
+                if (distance <= pass.minGap) {
+                  gapPenalty += (pass.minGap - distance + 1) * 20000;
+                }
+              }
+            }
+          }
+
+          // Daily load balancing penalty: prefer days with fewer total papers across school
+          const totalExamsOnDay = runningSchedule.filter((e) => e.date === d).length;
+          const loadPenalty = totalExamsOnDay * 1500;
+
+          // Spreading penalty: distance from targetDateIdx
+          const spreadPenalty =
+            suggestDistributionMode === "SPREAD"
+              ? Math.abs(dIdx - targetDateIdx) * 50
+              : dIdx * 20;
+
+          for (let pIdx = 0; pIdx < suggestPeriods.length; pIdx++) {
+            const period = suggestPeriods[pIdx];
+            const periodPenalty = pIdx * 10;
+
+            for (const h of halls) {
+              const candidate = {
+                id: `suggest-${crs.id}`,
+                course_id: crs.id,
+                course: crs.code,
+                course_title: crs.title,
+                class: className,
+                class_id: crs.class_id,
+                student_count: crs.classes?.student_count || 0,
+                hall: h.name,
+                hall_id: h.id,
+                hall_capacity: h.capacity ?? null,
+                date: d,
+                start_time: period.start,
+                end_time: period.end,
+              };
+
+              // Check conflict engine
+              const testList = [...runningSchedule, candidate];
+              const candidateConflicts = checkAllConflicts(testList, {
+                maxClassesPerHall: settings.max_classes_per_hall || 3,
+              });
+
+              const hasConflict = candidateConflicts.some((c) =>
+                c.entries?.some((e) => e.id === candidate.id)
+              );
+
+              if (!hasConflict) {
+                const totalScore = gapPenalty + loadPenalty + spreadPenalty + periodPenalty;
+                if (totalScore < lowestPenalty) {
+                  lowestPenalty = totalScore;
+                  bestCandidate = candidate;
+                }
+              }
             }
           }
         }
+
+        // If a conflict-free candidate was found in this pass, accept it
+        if (bestCandidate) {
+          break passLoop;
+        }
       }
 
-      if (!placed) {
+      if (bestCandidate) {
+        runningSchedule.push(bestCandidate);
+        newSuggestions.push(bestCandidate);
+      } else {
         unplaced.push({
           course: crs,
-          reason: "No available conflict-free hall or period found in range.",
+          reason: "No available conflict-free slot found matching weekday & spacing policies.",
         });
       }
     }
+
+    // Sort suggestions chronologically by date and start time for clean display
+    newSuggestions.sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return a.start_time.localeCompare(b.start_time);
+    });
 
     setSuggestions(newSuggestions);
     setUnplacedCourses(unplaced);
@@ -1089,6 +1199,14 @@ export default function TimetableDetailPage({ params }) {
             </div>
 
             <div className="mt-6 space-y-5">
+              {/* School Weekend Policy Banner */}
+              <div className="p-3.5 bg-blue-50/80 text-blue-950 border border-blue-200/90 rounded-xl text-xs flex items-center space-x-2.5">
+                <span className="text-base shrink-0">📅</span>
+                <div>
+                  <span className="font-bold">Strict School Weekday Policy:</span> Examinations run <strong>Monday through Friday only</strong>. Saturdays and Sundays are completely excluded.
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
@@ -1111,6 +1229,76 @@ export default function TimetableDetailPage({ params }) {
                     onChange={(e) => setSuggestEndDate(e.target.value)}
                     className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
                   />
+                </div>
+              </div>
+
+              {/* Spacing & Spreading Strategy Controls */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Spacing Strategy
+                  </label>
+                  <div className="space-y-2">
+                    <label
+                      className={`p-2.5 rounded-xl border flex items-center space-x-2.5 cursor-pointer transition ${
+                        suggestDistributionMode === "SPREAD"
+                          ? "border-blue-600 bg-blue-50/70 text-blue-950 ring-1 ring-blue-500 shadow-2xs"
+                          : "border-slate-200 hover:bg-slate-50 text-slate-700"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="distMode"
+                        value="SPREAD"
+                        checked={suggestDistributionMode === "SPREAD"}
+                        onChange={() => setSuggestDistributionMode("SPREAD")}
+                        className="text-blue-900 focus:ring-blue-900"
+                      />
+                      <div className="text-xs">
+                        <span className="font-bold block">Spread Across Window (Recommended)</span>
+                        <span className="text-slate-500 text-[11px]">Distributes papers throughout the weeks</span>
+                      </div>
+                    </label>
+
+                    <label
+                      className={`p-2.5 rounded-xl border flex items-center space-x-2.5 cursor-pointer transition ${
+                        suggestDistributionMode === "BALANCED_DAILY"
+                          ? "border-blue-600 bg-blue-50/70 text-blue-950 ring-1 ring-blue-500 shadow-2xs"
+                          : "border-slate-200 hover:bg-slate-50 text-slate-700"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="distMode"
+                        value="BALANCED_DAILY"
+                        checked={suggestDistributionMode === "BALANCED_DAILY"}
+                        onChange={() => setSuggestDistributionMode("BALANCED_DAILY")}
+                        className="text-blue-900 focus:ring-blue-900"
+                      />
+                      <div className="text-xs">
+                        <span className="font-bold block">Consecutive Weekdays</span>
+                        <span className="text-slate-500 text-[11px]">Fills sequential weekdays with rest gaps</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Same-Class Rest Gap
+                  </label>
+                  <select
+                    value={suggestMinGapDays}
+                    onChange={(e) => setSuggestMinGapDays(Number(e.target.value))}
+                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm bg-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+                  >
+                    <option value={1}>At least 1 day gap between papers (Recommended)</option>
+                    <option value={2}>At least 2 days gap between papers</option>
+                    <option value={0}>Any available weekday (Consecutive allowed)</option>
+                  </select>
+                  <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
+                    &bull; <strong>Max 1 exam per class per day</strong> is strictly guaranteed to prevent student fatigue.
+                  </p>
                 </div>
               </div>
 
@@ -1144,20 +1332,58 @@ export default function TimetableDetailPage({ params }) {
                   </div>
 
                   {suggestions.length === 0 ? (
-                    <p className="text-sm text-slate-500">No new courses were placed.</p>
+                    <p className="text-sm text-slate-500 p-6 text-center">No new courses were placed.</p>
                   ) : (
-                    <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-xl">
-                      {suggestions.map((s, idx) => (
-                        <div key={idx} className="p-3 text-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 bg-slate-50/50">
-                          <div>
-                            <span className="font-extrabold text-blue-900 font-mono mr-2">{s.course}</span>
-                            <span className="text-slate-600 font-medium">{s.class}</span>
+                    <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-2xl bg-white shadow-2xs">
+                      {suggestions.map((s, idx) => {
+                        const period = getExamPeriod(s.start_time);
+                        const time12 = formatPeriodRange(s.start_time, s.end_time);
+                        const weekdayName = new Date(s.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short" });
+                        return (
+                          <div
+                            key={idx}
+                            className="p-3.5 hover:bg-slate-50/80 transition flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5"
+                          >
+                            <div className="space-y-1">
+                              <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="font-mono font-black text-xs px-2.5 py-1 bg-blue-50 text-blue-900 border border-blue-200/70 rounded-md">
+                                  {s.course}
+                                </span>
+                                <span className="font-bold text-xs px-2 py-0.5 bg-slate-100 text-slate-800 rounded-md">
+                                  {s.class}
+                                </span>
+                                {s.student_count > 0 && (
+                                  <span className="text-[11px] text-slate-400 font-medium">
+                                    ({s.student_count} students)
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs font-semibold text-slate-900">
+                                {s.course_title}
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2 shrink-0">
+                              <div className="text-left sm:text-right">
+                                <div className="text-xs font-bold text-slate-900 flex items-center space-x-1">
+                                  <CalendarIcon className="w-3.5 h-3.5 text-blue-900 shrink-0" />
+                                  <span>{s.date} ({weekdayName})</span>
+                                </div>
+                                <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                                  {time12}
+                                </div>
+                              </div>
+                              <span className={`inline-flex items-center space-x-1 text-[10px] font-bold px-2 py-0.5 rounded-md ${period.badgeClass}`}>
+                                <span>{period.icon}</span>
+                                <span>{period.name}</span>
+                              </span>
+                              <span className="px-2.5 py-1 bg-purple-50 text-purple-900 border border-purple-200/70 rounded-md font-bold text-xs">
+                                🏛️ {s.hall}
+                              </span>
+                            </div>
                           </div>
-                          <div className="font-mono text-slate-700 text-[11px] sm:text-xs">
-                            {s.date} &bull; {s.start_time} - {s.end_time} &bull; <strong>{s.hall}</strong>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
 
