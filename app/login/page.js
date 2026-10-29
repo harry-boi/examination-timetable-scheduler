@@ -54,12 +54,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto my-8 sm:my-16">
-      <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-sm border border-slate-200/90 relative overflow-hidden">
+    <div className="max-w-md mx-auto my-6 sm:my-16 px-1 sm:px-0">
+      <div className="bg-white p-6 sm:p-10 rounded-3xl shadow-sm border border-slate-200/90 relative overflow-hidden">
         {/* Top accent gradient bar */}
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-900 to-indigo-600" />
 
-        <div className="text-center mb-8 space-y-2">
+        <div className="text-center mb-6 sm:mb-8 space-y-2">
           <div className="inline-flex justify-center mb-1">
             <PolyLogo className="w-12 h-12" />
           </div>
@@ -99,7 +99,7 @@ export default function LoginPage() {
               placeholder="admin@akwaibompoly.edu.ng"
               required
               autoComplete="email"
-              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 focus:border-transparent transition-all"
+              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-slate-900 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 focus:border-transparent transition-all"
             />
           </div>
 
@@ -118,7 +118,7 @@ export default function LoginPage() {
               placeholder="••••••••"
               required
               autoComplete="current-password"
-              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 focus:border-transparent transition-all"
+              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-slate-900 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 focus:border-transparent transition-all"
             />
           </div>
 

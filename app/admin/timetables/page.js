@@ -125,7 +125,7 @@ export default function TimetablesListPage() {
       )}
 
       {/* Create Timetable Form Card */}
-      <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
+      <div className="bg-white p-5 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
         <h2 className="text-base font-bold text-slate-900 mb-4 flex items-center space-x-2">
           <PlusIcon className="w-4 h-4 text-blue-900" />
           <span>Create New Examination Timetable</span>
@@ -141,7 +141,7 @@ export default function TimetablesListPage() {
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. 2025/2026 Second Semester Examination Timetable"
               required
-              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
             />
           </div>
 
@@ -155,7 +155,7 @@ export default function TimetablesListPage() {
               onChange={(e) => setSession(e.target.value)}
               placeholder="e.g. 2025/2026"
               required
-              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
             />
           </div>
 
@@ -167,7 +167,7 @@ export default function TimetablesListPage() {
               value={semester}
               onChange={(e) => setSemester(e.target.value)}
               required
-              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
             >
               <option value="First Semester">First Semester</option>
               <option value="Second Semester">Second Semester</option>
@@ -178,7 +178,7 @@ export default function TimetablesListPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-blue-300 text-white rounded-xl text-sm font-bold transition shadow-xs flex items-center space-x-2"
+              className="w-full sm:w-auto px-6 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-blue-300 text-white rounded-xl text-sm font-bold transition shadow-xs flex items-center justify-center space-x-2"
             >
               <PlusIcon className="w-4 h-4" />
               <span>{submitting ? "Creating..." : "Create Timetable"}</span>
@@ -196,9 +196,9 @@ export default function TimetablesListPage() {
         </div>
 
         {loading ? (
-          <div className="p-10 text-center text-slate-500 text-sm">Loading timetables...</div>
+          <div className="p-8 sm:p-10 text-center text-slate-500 text-sm">Loading timetables...</div>
         ) : timetables.length === 0 ? (
-          <div className="p-10 text-center text-slate-500 text-sm">
+          <div className="p-8 sm:p-10 text-center text-slate-500 text-sm">
             No examination timetables created yet. Use the form above to initialize one.
           </div>
         ) : (
@@ -208,9 +208,9 @@ export default function TimetablesListPage() {
               return (
                 <div
                   key={item.id}
-                  className="p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-slate-50/70 transition"
+                  className="p-5 sm:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-slate-50/70 transition"
                 >
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 w-full md:w-auto">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-base font-extrabold text-slate-900">{item.title}</h3>
                       <span className="px-2.5 py-0.5 text-xs font-bold bg-blue-50 text-blue-900 border border-blue-200/60 rounded-full">
@@ -220,24 +220,24 @@ export default function TimetablesListPage() {
                         {item.session}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 flex items-center space-x-2">
+                    <p className="text-xs text-slate-500 flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span><strong>{examCount}</strong> scheduled exam {examCount === 1 ? "paper" : "papers"}</span>
                       <span>&bull;</span>
                       <span>Created {new Date(item.created_at).toLocaleDateString()}</span>
                     </p>
                   </div>
 
-                  <div className="flex items-center space-x-3 w-full md:w-auto justify-end shrink-0">
+                  <div className="flex items-center gap-2.5 w-full md:w-auto justify-end shrink-0 pt-2 md:pt-0 border-t border-slate-100 md:border-t-0">
                     <Link
                       href={`/admin/timetables/${item.id}`}
-                      className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-xs"
+                      className="flex-1 md:flex-initial inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-xs"
                     >
-                      <span>Open Timetable Builder</span>
+                      <span>Open Builder</span>
                       <ArrowRightIcon className="w-3.5 h-3.5" />
                     </Link>
                     <button
                       onClick={() => setDeletingTimetable(item)}
-                      className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold border border-rose-200/70 transition"
+                      className="p-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold border border-rose-200/70 transition"
                       title="Delete Timetable"
                     >
                       <TrashIcon className="w-4 h-4" />
@@ -252,19 +252,19 @@ export default function TimetablesListPage() {
 
       {/* Delete Confirmation Modal */}
       {deletingTimetable && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
             <h3 className="text-lg font-bold text-slate-900">Confirm Deletion</h3>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
               Are you sure you want to delete{" "}
               <strong className="text-slate-900 font-semibold">"{deletingTimetable.title}"</strong>?
               This will permanently delete all associated scheduled examination papers.
             </p>
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setDeletingTimetable(null)}
-                className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                className="w-full sm:w-auto px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition text-center"
               >
                 Cancel
               </button>
@@ -272,7 +272,7 @@ export default function TimetablesListPage() {
                 type="button"
                 onClick={confirmDelete}
                 disabled={submitting}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold transition shadow-xs"
+                className="w-full sm:w-auto px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold transition shadow-xs text-center"
               >
                 {submitting ? "Deleting..." : "Yes, Delete Timetable"}
               </button>

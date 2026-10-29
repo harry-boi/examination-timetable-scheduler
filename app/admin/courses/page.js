@@ -205,7 +205,7 @@ export default function CoursesPage() {
           </p>
         </div>
       ) : (
-        <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
+        <div className="bg-white p-5 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
           <h2 className="text-base font-bold text-slate-900 mb-4 flex items-center space-x-2">
             <PlusIcon className="w-4 h-4 text-blue-900" />
             <span>{editingCourse ? `Edit Course: ${editingCourse.code}` : "Add New Course"}</span>
@@ -221,7 +221,7 @@ export default function CoursesPage() {
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                 placeholder="e.g. SWD 422"
                 required
-                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm uppercase font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm uppercase font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
               />
             </div>
 
@@ -235,7 +235,7 @@ export default function CoursesPage() {
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Software Testing and Quality Assurance"
                 required
-                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
               />
             </div>
 
@@ -247,7 +247,7 @@ export default function CoursesPage() {
                 value={classId}
                 onChange={(e) => setClassId(e.target.value)}
                 required
-                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+                className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
               >
                 {classesList.map((cls) => {
                   const deptCode = cls.departments?.code || "DEPT";
@@ -260,12 +260,12 @@ export default function CoursesPage() {
               </select>
             </div>
 
-            <div className="sm:col-span-3 flex justify-end space-x-3 pt-2">
+            <div className="sm:col-span-3 flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3 pt-2">
               {editingCourse && (
                 <button
                   type="button"
                   onClick={cancelEdit}
-                  className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                  className="w-full sm:w-auto px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition text-center"
                 >
                   Cancel
                 </button>
@@ -273,7 +273,7 @@ export default function CoursesPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-6 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-blue-300 text-white rounded-xl text-sm font-bold transition shadow-xs"
+                className="w-full sm:w-auto px-6 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-blue-300 text-white rounded-xl text-sm font-bold transition shadow-xs text-center"
               >
                 {submitting ? "Saving..." : editingCourse ? "Save Changes" : "Add Course"}
               </button>
@@ -295,87 +295,135 @@ export default function CoursesPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search course code or title..."
-              className="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-900"
+              className="w-full pl-9 pr-3 py-2 sm:py-1.5 border border-slate-300 rounded-xl sm:rounded-lg text-sm sm:text-xs focus:outline-none focus:ring-2 focus:ring-blue-900"
             />
           </div>
         </div>
 
         {loading ? (
-          <div className="p-10 text-center text-slate-500 text-sm">Loading courses...</div>
+          <div className="p-8 sm:p-10 text-center text-slate-500 text-sm">Loading courses...</div>
         ) : filteredCourses.length === 0 ? (
-          <div className="p-10 text-center text-slate-500 text-sm">
+          <div className="p-8 sm:p-10 text-center text-slate-500 text-sm">
             {searchTerm ? `No courses matching "${searchTerm}".` : "No courses added yet."}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50/70 text-slate-600 font-bold text-left text-xs uppercase tracking-wider">
-                <tr>
-                  <th className="px-6 py-3.5">Code</th>
-                  <th className="px-6 py-3.5">Course Title</th>
-                  <th className="px-6 py-3.5">Class Association</th>
-                  <th className="px-6 py-3.5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredCourses.map((crs) => {
-                  const deptCode = crs.classes?.departments?.code || "DEPT";
-                  const classNameFormatted = `${deptCode} ${crs.classes?.level || ""}`;
-                  return (
-                    <tr key={crs.id} className="hover:bg-slate-50/80 transition">
-                      <td className="px-6 py-4">
+          <>
+            {/* Mobile Cards View */}
+            <div className="block md:hidden divide-y divide-slate-100">
+              {filteredCourses.map((crs) => {
+                const deptCode = crs.classes?.departments?.code || "DEPT";
+                const classNameFormatted = `${deptCode} ${crs.classes?.level || ""}`;
+                return (
+                  <div key={crs.id} className="p-4 sm:p-5 space-y-3 hover:bg-slate-50/70 transition">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
                         <span className="font-mono font-bold text-xs px-2.5 py-1 bg-blue-50 text-blue-900 border border-blue-200/70 rounded-md">
                           {crs.code}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 font-bold text-slate-900">{crs.title}</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center space-x-1.5 px-3 py-1 bg-slate-100 text-slate-800 rounded-lg font-bold text-xs">
-                          <span>{classNameFormatted}</span>
-                          <span className="text-slate-400 font-normal">({crs.classes?.student_count || 0} students)</span>
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right space-x-2">
-                        <button
-                          onClick={() => startEdit(crs)}
-                          className="inline-flex items-center space-x-1 px-3 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold transition"
-                        >
-                          <EditIcon className="w-3.5 h-3.5" />
-                          <span>Edit</span>
-                        </button>
-                        <button
-                          onClick={() => setDeletingCourse(crs)}
-                          className="inline-flex items-center space-x-1 px-3 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-semibold transition"
-                        >
-                          <TrashIcon className="w-3.5 h-3.5" />
-                          <span>Delete</span>
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        <h3 className="font-bold text-slate-900 text-base mt-1.5">{crs.title}</h3>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 bg-slate-50/80 rounded-xl flex items-center justify-between text-xs">
+                      <span className="text-slate-500 font-medium">Class:</span>
+                      <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 bg-white border border-slate-200 text-slate-800 rounded-lg font-bold">
+                        <span>{classNameFormatted}</span>
+                        <span className="text-slate-400 font-normal">({crs.classes?.student_count || 0} students)</span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                      <button
+                        onClick={() => startEdit(crs)}
+                        className="flex-1 inline-flex items-center justify-center space-x-1.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition"
+                      >
+                        <EditIcon className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </button>
+                      <button
+                        onClick={() => setDeletingCourse(crs)}
+                        className="flex-1 inline-flex items-center justify-center space-x-1.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold transition"
+                      >
+                        <TrashIcon className="w-3.5 h-3.5" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50/70 text-slate-600 font-bold text-left text-xs uppercase tracking-wider">
+                  <tr>
+                    <th className="px-6 py-3.5">Code</th>
+                    <th className="px-6 py-3.5">Course Title</th>
+                    <th className="px-6 py-3.5">Class Association</th>
+                    <th className="px-6 py-3.5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredCourses.map((crs) => {
+                    const deptCode = crs.classes?.departments?.code || "DEPT";
+                    const classNameFormatted = `${deptCode} ${crs.classes?.level || ""}`;
+                    return (
+                      <tr key={crs.id} className="hover:bg-slate-50/80 transition">
+                        <td className="px-6 py-4">
+                          <span className="font-mono font-bold text-xs px-2.5 py-1 bg-blue-50 text-blue-900 border border-blue-200/70 rounded-md">
+                            {crs.code}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 font-bold text-slate-900">{crs.title}</td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center space-x-1.5 px-3 py-1 bg-slate-100 text-slate-800 rounded-lg font-bold text-xs">
+                            <span>{classNameFormatted}</span>
+                            <span className="text-slate-400 font-normal">({crs.classes?.student_count || 0} students)</span>
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right space-x-2">
+                          <button
+                            onClick={() => startEdit(crs)}
+                            className="inline-flex items-center space-x-1 px-3 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold transition"
+                          >
+                            <EditIcon className="w-3.5 h-3.5" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={() => setDeletingCourse(crs)}
+                            className="inline-flex items-center space-x-1 px-3 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-semibold transition"
+                          >
+                            <TrashIcon className="w-3.5 h-3.5" />
+                            <span>Delete</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
       {/* Delete Confirmation Modal */}
       {deletingCourse && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
             <h3 className="text-lg font-bold text-slate-900">Confirm Deletion</h3>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
               Are you sure you want to delete course{" "}
               <strong className="text-slate-900 font-semibold">
                 "{deletingCourse.code} - {deletingCourse.title}"
               </strong>?
             </p>
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setDeletingCourse(null)}
-                className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                className="w-full sm:w-auto px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition text-center"
               >
                 Cancel
               </button>
@@ -383,7 +431,7 @@ export default function CoursesPage() {
                 type="button"
                 onClick={confirmDelete}
                 disabled={submitting}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold transition shadow-xs"
+                className="w-full sm:w-auto px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold transition shadow-xs text-center"
               >
                 {submitting ? "Deleting..." : "Yes, Delete Course"}
               </button>

@@ -164,7 +164,7 @@ export default function DepartmentsPage() {
       )}
 
       {/* Add / Edit Form Card */}
-      <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
+      <div className="bg-white p-5 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
         <h2 className="text-base font-bold text-slate-900 mb-4 flex items-center space-x-2">
           <PlusIcon className="w-4 h-4 text-blue-900" />
           <span>{editingDept ? `Edit Department: ${editingDept.name}` : "Add New Department"}</span>
@@ -180,7 +180,7 @@ export default function DepartmentsPage() {
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Software Development, Computer Science"
               required
-              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
             />
           </div>
           <div>
@@ -193,15 +193,15 @@ export default function DepartmentsPage() {
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               placeholder="e.g. SWD"
               required
-              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 uppercase font-mono font-semibold transition"
+              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 uppercase font-mono font-semibold transition"
             />
           </div>
-          <div className="sm:col-span-3 flex justify-end space-x-3 pt-2">
+          <div className="sm:col-span-3 flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3 pt-2">
             {editingDept && (
               <button
                 type="button"
                 onClick={cancelEdit}
-                className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                className="w-full sm:w-auto px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition text-center"
               >
                 Cancel
               </button>
@@ -209,7 +209,7 @@ export default function DepartmentsPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-blue-300 text-white rounded-xl text-sm font-bold transition shadow-xs"
+              className="w-full sm:w-auto px-6 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-blue-300 text-white rounded-xl text-sm font-bold transition shadow-xs text-center"
             >
               {submitting ? "Saving..." : editingDept ? "Save Changes" : "Add Department"}
             </button>
@@ -230,75 +230,108 @@ export default function DepartmentsPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Filter departments..."
-              className="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-900"
+              className="w-full pl-9 pr-3 py-2 sm:py-1.5 border border-slate-300 rounded-xl sm:rounded-lg text-sm sm:text-xs focus:outline-none focus:ring-2 focus:ring-blue-900"
             />
           </div>
         </div>
 
         {loading ? (
-          <div className="p-10 text-center text-slate-500 text-sm">Loading departments...</div>
+          <div className="p-8 sm:p-10 text-center text-slate-500 text-sm">Loading departments...</div>
         ) : filteredDepts.length === 0 ? (
-          <div className="p-10 text-center text-slate-500 text-sm">
+          <div className="p-8 sm:p-10 text-center text-slate-500 text-sm">
             {searchTerm ? `No departments matching "${searchTerm}".` : "No departments added yet."}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50/70 text-slate-600 font-bold text-left text-xs uppercase tracking-wider">
-                <tr>
-                  <th className="px-6 py-3.5">Code</th>
-                  <th className="px-6 py-3.5">Department Name</th>
-                  <th className="px-6 py-3.5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredDepts.map((dept) => (
-                  <tr key={dept.id} className="hover:bg-slate-50/80 transition">
-                    <td className="px-6 py-4">
-                      <span className="font-mono font-bold text-xs px-2.5 py-1 bg-blue-50 text-blue-900 border border-blue-200/70 rounded-md">
-                        {dept.code}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 font-semibold text-slate-900">{dept.name}</td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={() => startEdit(dept)}
-                        className="inline-flex items-center space-x-1 px-3 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold transition"
-                      >
-                        <EditIcon className="w-3.5 h-3.5" />
-                        <span>Edit</span>
-                      </button>
-                      <button
-                        onClick={() => setDeletingDept(dept)}
-                        className="inline-flex items-center space-x-1 px-3 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-semibold transition"
-                      >
-                        <TrashIcon className="w-3.5 h-3.5" />
-                        <span>Delete</span>
-                      </button>
-                    </td>
+          <>
+            {/* Mobile Cards View */}
+            <div className="block md:hidden divide-y divide-slate-100">
+              {filteredDepts.map((dept) => (
+                <div key={dept.id} className="p-4 sm:p-5 space-y-3 hover:bg-slate-50/70 transition">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-xs px-2.5 py-1 bg-blue-50 text-blue-900 border border-blue-200/70 rounded-md">
+                      {dept.code}
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-slate-900 text-base">{dept.name}</h3>
+                  <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                    <button
+                      onClick={() => startEdit(dept)}
+                      className="flex-1 inline-flex items-center justify-center space-x-1.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition"
+                    >
+                      <EditIcon className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => setDeletingDept(dept)}
+                      className="flex-1 inline-flex items-center justify-center space-x-1.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold transition"
+                    >
+                      <TrashIcon className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50/70 text-slate-600 font-bold text-left text-xs uppercase tracking-wider">
+                  <tr>
+                    <th className="px-6 py-3.5">Code</th>
+                    <th className="px-6 py-3.5">Department Name</th>
+                    <th className="px-6 py-3.5 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredDepts.map((dept) => (
+                    <tr key={dept.id} className="hover:bg-slate-50/80 transition">
+                      <td className="px-6 py-4">
+                        <span className="font-mono font-bold text-xs px-2.5 py-1 bg-blue-50 text-blue-900 border border-blue-200/70 rounded-md">
+                          {dept.code}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-semibold text-slate-900">{dept.name}</td>
+                      <td className="px-6 py-4 text-right space-x-2">
+                        <button
+                          onClick={() => startEdit(dept)}
+                          className="inline-flex items-center space-x-1 px-3 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold transition"
+                        >
+                          <EditIcon className="w-3.5 h-3.5" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          onClick={() => setDeletingDept(dept)}
+                          className="inline-flex items-center space-x-1 px-3 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-semibold transition"
+                        >
+                          <TrashIcon className="w-3.5 h-3.5" />
+                          <span>Delete</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
       {/* Delete Confirmation Modal */}
       {deletingDept && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
             <h3 className="text-lg font-bold text-slate-900">Confirm Deletion</h3>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
               Are you sure you want to delete{" "}
               <strong className="text-slate-900 font-semibold">"{deletingDept.name}" ({deletingDept.code})</strong>?
               This will also remove associated classes and course records.
             </p>
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setDeletingDept(null)}
-                className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                className="w-full sm:w-auto px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition text-center"
               >
                 Cancel
               </button>
@@ -306,7 +339,7 @@ export default function DepartmentsPage() {
                 type="button"
                 onClick={confirmDelete}
                 disabled={submitting}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold transition shadow-xs"
+                className="w-full sm:w-auto px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold transition shadow-xs text-center"
               >
                 {submitting ? "Deleting..." : "Yes, Delete Department"}
               </button>

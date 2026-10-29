@@ -503,10 +503,10 @@ export default function TimetableDetailPage({ params }) {
           </h1>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto">
           <button
             onClick={handlePrint}
-            className="px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold transition flex items-center space-x-1.5 shadow-2xs"
+            className="w-full sm:w-auto justify-center px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 rounded-xl text-xs sm:text-sm font-bold transition flex items-center space-x-1.5 shadow-2xs"
             title="Print Official Timetable Roster"
           >
             <PrinterIcon className="w-4 h-4 text-blue-900" />
@@ -514,14 +514,14 @@ export default function TimetableDetailPage({ params }) {
           </button>
           <button
             onClick={() => setShowSuggestModal(true)}
-            className="px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 text-indigo-900 border border-indigo-200/80 rounded-xl text-xs sm:text-sm font-bold transition flex items-center space-x-1.5 shadow-2xs"
+            className="w-full sm:w-auto justify-center px-4 py-2.5 bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 text-indigo-900 border border-indigo-200/80 rounded-xl text-xs sm:text-sm font-bold transition flex items-center space-x-1.5 shadow-2xs"
           >
             <SparklesIcon className="w-4 h-4 text-indigo-600" />
             <span>Suggest Timetable</span>
           </button>
           <button
             onClick={openAddModal}
-            className="px-5 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-xs flex items-center space-x-1.5"
+            className="w-full sm:w-auto justify-center px-5 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-xs flex items-center space-x-1.5"
           >
             <PlusIcon className="w-4 h-4 text-amber-300" />
             <span>Add Exam Entry</span>
@@ -616,12 +616,12 @@ export default function TimetableDetailPage({ params }) {
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full lg:w-auto lg:flex lg:items-center">
             {/* Filter by Hall */}
             <select
               value={filterHall}
               onChange={(e) => setFilterHall(e.target.value)}
-              className="px-3 py-1.5 border border-slate-300 rounded-xl text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-900"
+              className="w-full lg:w-auto px-3 py-2 border border-slate-300 rounded-xl text-sm sm:text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-900"
             >
               <option value="ALL">All Halls ({halls.length})</option>
               {halls.map((h) => (
@@ -635,7 +635,7 @@ export default function TimetableDetailPage({ params }) {
             <select
               value={filterClass}
               onChange={(e) => setFilterClass(e.target.value)}
-              className="px-3 py-1.5 border border-slate-300 rounded-xl text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-900"
+              className="w-full lg:w-auto px-3 py-2 border border-slate-300 rounded-xl text-sm sm:text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-900"
             >
               <option value="ALL">All Classes ({distinctClassOptions.length})</option>
               {distinctClassOptions.map((cName) => (
@@ -646,148 +646,238 @@ export default function TimetableDetailPage({ params }) {
             </select>
 
             {/* Quick Search */}
-            <div className="relative">
-              <SearchIcon className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+            <div className="relative w-full lg:w-auto">
+              <SearchIcon className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search code, venue, class..."
-                className="pl-8 pr-3 py-1.5 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-900"
+                className="w-full lg:w-48 pl-9 pr-3 py-2 border border-slate-300 rounded-xl text-sm sm:text-xs focus:outline-none focus:ring-2 focus:ring-blue-900"
               />
             </div>
           </div>
         </div>
 
         {exams.length === 0 ? (
-          <div className="p-12 text-center text-slate-500 text-sm space-y-3">
+          <div className="p-8 sm:p-12 text-center text-slate-500 text-sm space-y-3">
             <p className="font-medium text-slate-600">No examination papers scheduled yet.</p>
             <p className="text-xs text-slate-400">
               Use <strong>+ Add Exam Entry</strong> to schedule individual papers, or click <strong>✨ Suggest Timetable</strong> to automatically generate conflict-free allocations.
             </p>
           </div>
         ) : displayedExams.length === 0 ? (
-          <div className="p-10 text-center text-slate-500 text-sm">
+          <div className="p-8 sm:p-10 text-center text-slate-500 text-sm">
             No examination papers match the current filters.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm print:text-xs border border-slate-300">
-              <thead className="bg-slate-50/70 text-slate-600 font-bold text-left text-xs uppercase tracking-wider print:bg-slate-200 print:text-black">
-                <tr>
-                  <th className="px-4 py-3 border border-slate-300">Date</th>
-                  <th className="px-4 py-3 border border-slate-300">Period (Time)</th>
-                  <th className="px-4 py-3 border border-slate-300">Course Code</th>
-                  <th className="px-4 py-3 border border-slate-300">Course Title</th>
-                  <th className="px-4 py-3 border border-slate-300">Offering Class</th>
-                  <th className="px-4 py-3 border border-slate-300">Hall Venue</th>
-                  <th className="px-4 py-3 border border-slate-300 text-center">Students</th>
-                  <th className="px-4 py-3 text-right print:hidden">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {displayedExams.map((item, idx) => {
-                  const isConflicting = conflictingExamIds.has(item.id);
-                  const deptCode = item.courses?.classes?.departments?.code || "DEPT";
-                  const level = item.courses?.classes?.level || "";
-                  const className = `${deptCode} ${level}`;
+          <>
+            {/* Mobile Cards View (Visible on screens < 768px, hidden on desktop and print) */}
+            <div className="block md:hidden divide-y divide-slate-100 print:hidden">
+              {displayedExams.map((item) => {
+                const isConflicting = conflictingExamIds.has(item.id);
+                const deptCode = item.courses?.classes?.departments?.code || "DEPT";
+                const level = item.courses?.classes?.level || "";
+                const className = `${deptCode} ${level}`;
+                const period = getExamPeriod(item.start_time);
+                const time12 = formatPeriodRange(item.start_time, item.end_time);
 
-                  return (
-                    <tr
-                      key={item.id}
-                      className={`transition-colors ${
-                        isConflicting
-                          ? "bg-rose-50/70 hover:bg-rose-100/60 border-l-4 border-rose-600 print:border-l-0"
-                          : idx % 2 === 0 ? "bg-white" : "bg-slate-50/40"
-                      }`}
-                    >
-                      <td className="px-4 py-3 whitespace-nowrap border border-slate-300">
-                        <div className="font-bold text-slate-900">{item.exam_date}</div>
-                        {isConflicting && (
-                          <span className="inline-flex items-center space-x-1 text-[10px] font-black uppercase text-rose-700 bg-rose-100/90 px-1.5 py-0.5 rounded mt-1 print:hidden">
-                            <span>⚠️ Conflict</span>
+                return (
+                  <div
+                    key={item.id}
+                    className={`p-4 sm:p-5 space-y-3 transition-colors ${
+                      isConflicting ? "bg-rose-50/70 border-l-4 border-rose-600" : "hover:bg-slate-50/60"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-mono font-black text-blue-900 text-base">
+                            {item.courses?.code}
                           </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap border border-slate-300">
-                        {(() => {
-                          const period = getExamPeriod(item.start_time);
-                          const time12 = formatPeriodRange(item.start_time, item.end_time);
-                          return (
-                            <div className="space-y-1">
-                              <span className={`inline-flex items-center space-x-1 text-[11px] font-bold px-2 py-0.5 rounded-md ${period.badgeClass}`}>
-                                <span>{period.icon}</span>
-                                <span>{period.name}</span>
-                              </span>
-                              <div className="font-mono text-xs font-bold text-slate-800">
-                                {time12}
-                              </div>
-                              <div className="text-[10px] text-slate-400 font-mono print:hidden">
-                                {item.start_time?.slice(0, 5)} &ndash; {item.end_time?.slice(0, 5)}
-                              </div>
-                            </div>
-                          );
-                        })()}
-                      </td>
-                      <td className="px-4 py-3 font-mono font-black text-blue-900 print:text-black whitespace-nowrap border border-slate-300">
-                        {item.courses?.code}
-                      </td>
-                      <td className="px-4 py-3 text-slate-800 font-medium border border-slate-300">
-                        {item.courses?.title}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap border border-slate-300">
-                        <span className="px-2 py-0.5 bg-slate-100 print:bg-transparent text-slate-800 rounded font-bold text-xs">
-                          {className}
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-800 rounded-md font-bold text-xs">
+                            {className}
+                          </span>
+                        </div>
+                        <h4 className="text-sm font-semibold text-slate-900 mt-1">
+                          {item.courses?.title}
+                        </h4>
+                      </div>
+                      {isConflicting && (
+                        <span className="shrink-0 inline-flex items-center space-x-1 text-[10px] font-black uppercase text-rose-700 bg-rose-100/90 px-2 py-0.5 rounded">
+                          <span>⚠️ Conflict</span>
                         </span>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap font-bold text-slate-900 border border-slate-300">
-                        {item.halls?.name}
-                      </td>
-                      <td className="px-4 py-3 font-mono font-bold text-slate-800 text-center border border-slate-300">
-                        {item.courses?.classes?.student_count || 0}
-                      </td>
-                      <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap print:hidden">
-                        <button
-                          onClick={() => openEditModal(item)}
-                          className="inline-flex items-center space-x-1 px-3 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold transition"
-                        >
-                          <EditIcon className="w-3.5 h-3.5" />
-                          <span>Edit</span>
-                        </button>
-                        <button
-                          onClick={() => setDeletingExam(item)}
-                          className="inline-flex items-center space-x-1 px-3 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-semibold transition"
-                        >
-                          <TrashIcon className="w-3.5 h-3.5" />
-                          <span>Delete</span>
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      )}
+                    </div>
 
-            {/* Official Print Footer / Committee Endorsements (Visible ONLY on print) */}
-            <div className="hidden print:flex justify-between items-end mt-12 pt-6 text-xs text-slate-700 border-t border-slate-400">
-              <div className="text-left space-y-1">
-                <p className="font-bold">Important Instructions for Hall Invigilators:</p>
-                <p>1. Invigilators must ensure admission of authorized students only matching their enrolled class list.</p>
-                <p>2. Report any venue seating capacity irregularities directly to the committee secretariat.</p>
-              </div>
-              <div className="text-right space-y-10">
-                <div>___________________________________________________</div>
-                <div className="font-bold">Chairman, Time Table &amp; Class Allocation Committee</div>
+                    <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                      <div className="p-2.5 bg-slate-50/80 rounded-xl space-y-1">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Date &amp; Time</span>
+                        <div className="font-bold text-slate-900 flex items-center space-x-1">
+                          <CalendarIcon className="w-3.5 h-3.5 text-blue-900 shrink-0" />
+                          <span>{item.exam_date}</span>
+                        </div>
+                        <div className="flex items-center space-x-1.5 pt-0.5">
+                          <span className={`inline-flex items-center space-x-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded ${period.badgeClass}`}>
+                            <span>{period.icon}</span>
+                            <span>{period.name}</span>
+                          </span>
+                          <span className="font-mono font-bold text-slate-800 text-[11px]">{time12}</span>
+                        </div>
+                      </div>
+
+                      <div className="p-2.5 bg-slate-50/80 rounded-xl space-y-1">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Venue &amp; Students</span>
+                        <div className="font-bold text-slate-900 flex items-center space-x-1 truncate">
+                          <BuildingIcon className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                          <span className="truncate">{item.halls?.name}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-600 font-medium">
+                          Headcount: <span className="font-mono font-bold text-slate-900">{item.courses?.classes?.student_count || 0}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                      <button
+                        onClick={() => openEditModal(item)}
+                        className="flex-1 inline-flex items-center justify-center space-x-1.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition"
+                      >
+                        <EditIcon className="w-3.5 h-3.5" />
+                        <span>Edit Entry</span>
+                      </button>
+                      <button
+                        onClick={() => setDeletingExam(item)}
+                        className="flex-1 inline-flex items-center justify-center space-x-1.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold transition"
+                      >
+                        <TrashIcon className="w-3.5 h-3.5" />
+                        <span>Delete</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop & Print Table View */}
+            <div className="hidden md:block print:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-sm print:text-xs border border-slate-300">
+                <thead className="bg-slate-50/70 text-slate-600 font-bold text-left text-xs uppercase tracking-wider print:bg-slate-200 print:text-black">
+                  <tr>
+                    <th className="px-4 py-3 border border-slate-300">Date</th>
+                    <th className="px-4 py-3 border border-slate-300">Period (Time)</th>
+                    <th className="px-4 py-3 border border-slate-300">Course Code</th>
+                    <th className="px-4 py-3 border border-slate-300">Course Title</th>
+                    <th className="px-4 py-3 border border-slate-300">Offering Class</th>
+                    <th className="px-4 py-3 border border-slate-300">Hall Venue</th>
+                    <th className="px-4 py-3 border border-slate-300 text-center">Students</th>
+                    <th className="px-4 py-3 text-right print:hidden">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {displayedExams.map((item, idx) => {
+                    const isConflicting = conflictingExamIds.has(item.id);
+                    const deptCode = item.courses?.classes?.departments?.code || "DEPT";
+                    const level = item.courses?.classes?.level || "";
+                    const className = `${deptCode} ${level}`;
+
+                    return (
+                      <tr
+                        key={item.id}
+                        className={`transition-colors ${
+                          isConflicting
+                            ? "bg-rose-50/70 hover:bg-rose-100/60 border-l-4 border-rose-600 print:border-l-0"
+                            : idx % 2 === 0 ? "bg-white" : "bg-slate-50/40"
+                        }`}
+                      >
+                        <td className="px-4 py-3 whitespace-nowrap border border-slate-300">
+                          <div className="font-bold text-slate-900">{item.exam_date}</div>
+                          {isConflicting && (
+                            <span className="inline-flex items-center space-x-1 text-[10px] font-black uppercase text-rose-700 bg-rose-100/90 px-1.5 py-0.5 rounded mt-1 print:hidden">
+                              <span>⚠️ Conflict</span>
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap border border-slate-300">
+                          {(() => {
+                            const period = getExamPeriod(item.start_time);
+                            const time12 = formatPeriodRange(item.start_time, item.end_time);
+                            return (
+                              <div className="space-y-1">
+                                <span className={`inline-flex items-center space-x-1 text-[11px] font-bold px-2 py-0.5 rounded-md ${period.badgeClass}`}>
+                                  <span>{period.icon}</span>
+                                  <span>{period.name}</span>
+                                </span>
+                                <div className="font-mono text-xs font-bold text-slate-800">
+                                  {time12}
+                                </div>
+                                <div className="text-[10px] text-slate-400 font-mono print:hidden">
+                                  {item.start_time?.slice(0, 5)} &ndash; {item.end_time?.slice(0, 5)}
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </td>
+                        <td className="px-4 py-3 font-mono font-black text-blue-900 print:text-black whitespace-nowrap border border-slate-300">
+                          {item.courses?.code}
+                        </td>
+                        <td className="px-4 py-3 text-slate-800 font-medium border border-slate-300">
+                          {item.courses?.title}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap border border-slate-300">
+                          <span className="px-2 py-0.5 bg-slate-100 print:bg-transparent text-slate-800 rounded font-bold text-xs">
+                            {className}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap font-bold text-slate-900 border border-slate-300">
+                          {item.halls?.name}
+                        </td>
+                        <td className="px-4 py-3 font-mono font-bold text-slate-800 text-center border border-slate-300">
+                          {item.courses?.classes?.student_count || 0}
+                        </td>
+                        <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap print:hidden">
+                          <button
+                            onClick={() => openEditModal(item)}
+                            className="inline-flex items-center space-x-1 px-3 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold transition"
+                          >
+                            <EditIcon className="w-3.5 h-3.5" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={() => setDeletingExam(item)}
+                            className="inline-flex items-center space-x-1 px-3 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-semibold transition"
+                          >
+                            <TrashIcon className="w-3.5 h-3.5" />
+                            <span>Delete</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {/* Official Print Footer / Committee Endorsements (Visible ONLY on print) */}
+              <div className="hidden print:flex justify-between items-end mt-12 pt-6 text-xs text-slate-700 border-t border-slate-400">
+                <div className="text-left space-y-1">
+                  <p className="font-bold">Important Instructions for Hall Invigilators:</p>
+                  <p>1. Invigilators must ensure admission of authorized students only matching their enrolled class list.</p>
+                  <p>2. Report any venue seating capacity irregularities directly to the committee secretariat.</p>
+                </div>
+                <div className="text-right space-y-10">
+                  <div>___________________________________________________</div>
+                  <div className="font-bold">Chairman, Time Table &amp; Class Allocation Committee</div>
+                </div>
               </div>
             </div>
-          </div>
+          </>
         )}
       </div>
 
       {/* Add / Edit Exam Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 print:hidden">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 print:hidden">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-7 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95">
             <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center space-x-2">
               <PlusIcon className="w-5 h-5 text-blue-900" />
               <span>{editingExam ? "Edit Examination Entry" : "Schedule Examination Paper"}</span>
@@ -801,7 +891,7 @@ export default function TimetableDetailPage({ params }) {
                 <select
                   value={selectedCourseId}
                   onChange={(e) => setSelectedCourseId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
                 >
                   {courses.map((c) => {
                     const dept = c.classes?.departments?.code || "DEPT";
@@ -822,7 +912,7 @@ export default function TimetableDetailPage({ params }) {
                 <select
                   value={selectedHallId}
                   onChange={(e) => setSelectedHallId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
                 >
                   {halls.map((h) => (
                     <option key={h.id} value={h.id}>
@@ -841,7 +931,7 @@ export default function TimetableDetailPage({ params }) {
                   value={examDate}
                   onChange={(e) => setExamDate(e.target.value)}
                   required
-                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+                  className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
                 />
               </div>
 
@@ -850,7 +940,7 @@ export default function TimetableDetailPage({ params }) {
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                   Exam Period / Session
                 </label>
-                <div className="grid grid-cols-2 gap-3 mb-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mb-2">
                   <button
                     type="button"
                     onClick={() => {
@@ -891,7 +981,7 @@ export default function TimetableDetailPage({ params }) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                     Start Time
@@ -901,7 +991,7 @@ export default function TimetableDetailPage({ params }) {
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     required
-                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
                   />
                 </div>
                 <div>
@@ -913,16 +1003,16 @@ export default function TimetableDetailPage({ params }) {
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                     required
-                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
                   />
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end space-x-3 pt-2">
+              <div className="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                  className="w-full sm:w-auto px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition text-center"
                 >
                   Cancel
                 </button>
@@ -930,7 +1020,7 @@ export default function TimetableDetailPage({ params }) {
                   type="button"
                   onClick={() => validateAndSaveExam(false)}
                   disabled={submitting}
-                  className="px-6 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-blue-300 text-white rounded-xl text-sm font-bold transition shadow-xs"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-blue-300 text-white rounded-xl text-sm font-bold transition shadow-xs text-center"
                 >
                   {submitting ? "Validating & Saving..." : "Save Exam Entry"}
                 </button>
@@ -942,8 +1032,8 @@ export default function TimetableDetailPage({ params }) {
 
       {/* Conflict Confirmation Modal */}
       {conflictWarningModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 print:hidden">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-rose-300 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 print:hidden">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-7 shadow-2xl border border-rose-300 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95">
             <h3 className="text-lg font-black text-rose-950 flex items-center space-x-2">
               <AlertTriangleIcon className="w-5 h-5 text-rose-600" />
               <span>Potential Timetable Conflict Detected</span>
@@ -962,18 +1052,18 @@ export default function TimetableDetailPage({ params }) {
             <p className="mt-3 text-xs text-slate-500 italic">
               Note: The timetable committee may occasionally accept a shared hall on purpose.
             </p>
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setConflictWarningModal(null)}
-                className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                className="w-full sm:w-auto px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition text-center"
               >
                 Cancel &amp; Adjust
               </button>
               <button
                 type="button"
                 onClick={conflictWarningModal.onConfirm}
-                className="px-5 py-2.5 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-sm font-bold transition shadow-xs"
+                className="w-full sm:w-auto px-5 py-2.5 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-sm font-bold transition shadow-xs text-center"
               >
                 Confirm &amp; Save Anyway
               </button>
@@ -984,14 +1074,14 @@ export default function TimetableDetailPage({ params }) {
 
       {/* Suggest Timetable Assistant Modal (Phase 8) */}
       {showSuggestModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 print:hidden">
-          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 print:hidden">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-5 sm:p-8 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95">
             <div className="flex items-center space-x-2.5">
-              <div className="p-2 bg-indigo-50 text-indigo-700 rounded-xl">
+              <div className="p-2 bg-indigo-50 text-indigo-700 rounded-xl shrink-0">
                 <SparklesIcon className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-xl font-black text-slate-900">Automatic Timetable Scheduler</h3>
+                <h3 className="text-lg sm:text-xl font-black text-slate-900">Automatic Timetable Scheduler</h3>
                 <p className="text-xs text-slate-500">
                   Computes valid dates, periods, and venues for unscheduled courses causing zero conflicts.
                 </p>
@@ -1008,7 +1098,7 @@ export default function TimetableDetailPage({ params }) {
                     type="date"
                     value={suggestStartDate}
                     onChange={(e) => setSuggestStartDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
                   />
                 </div>
                 <div>
@@ -1019,7 +1109,7 @@ export default function TimetableDetailPage({ params }) {
                     type="date"
                     value={suggestEndDate}
                     onChange={(e) => setSuggestEndDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
                   />
                 </div>
               </div>
@@ -1028,7 +1118,7 @@ export default function TimetableDetailPage({ params }) {
                 <button
                   type="button"
                   onClick={runAutoScheduler}
-                  className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition shadow-xs flex items-center space-x-2"
+                  className="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition shadow-xs flex items-center justify-center space-x-2"
                 >
                   <SparklesIcon className="w-4 h-4 text-amber-300" />
                   <span>Generate Conflict-Free Allocations</span>
@@ -1037,7 +1127,7 @@ export default function TimetableDetailPage({ params }) {
 
               {suggestions && (
                 <div className="mt-6 space-y-4 border-t border-slate-200 pt-5">
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <h4 className="font-bold text-slate-900 text-sm">
                       Proposed Suggestions ({suggestions.length} courses placed)
                     </h4>
@@ -1045,7 +1135,7 @@ export default function TimetableDetailPage({ params }) {
                       <button
                         onClick={acceptAndSaveSuggestions}
                         disabled={submitting}
-                        className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center space-x-1.5"
+                        className="w-full sm:w-auto px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center justify-center space-x-1.5"
                       >
                         <CheckCircleIcon className="w-3.5 h-3.5" />
                         <span>{submitting ? "Saving All..." : "Accept & Commit Suggestions"}</span>
@@ -1058,12 +1148,12 @@ export default function TimetableDetailPage({ params }) {
                   ) : (
                     <div className="max-h-60 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-xl">
                       {suggestions.map((s, idx) => (
-                        <div key={idx} className="p-3 text-xs flex justify-between items-center bg-slate-50/50">
+                        <div key={idx} className="p-3 text-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 bg-slate-50/50">
                           <div>
                             <span className="font-extrabold text-blue-900 font-mono mr-2">{s.course}</span>
                             <span className="text-slate-600 font-medium">{s.class}</span>
                           </div>
-                          <div className="font-mono text-slate-700">
+                          <div className="font-mono text-slate-700 text-[11px] sm:text-xs">
                             {s.date} &bull; {s.start_time} - {s.end_time} &bull; <strong>{s.hall}</strong>
                           </div>
                         </div>
@@ -1088,7 +1178,7 @@ export default function TimetableDetailPage({ params }) {
                 <button
                   type="button"
                   onClick={() => setShowSuggestModal(false)}
-                  className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                  className="w-full sm:w-auto px-4 py-2 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition text-center"
                 >
                   Close
                 </button>
@@ -1100,21 +1190,21 @@ export default function TimetableDetailPage({ params }) {
 
       {/* Delete Exam Modal */}
       {deletingExam && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 print:hidden">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 print:hidden">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
             <h3 className="text-lg font-bold text-slate-900">Remove Exam Paper</h3>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
               Are you sure you want to remove{" "}
               <strong className="text-slate-900 font-semibold">
                 "{deletingExam.courses?.code} - {deletingExam.courses?.title}"
               </strong>{" "}
               from this timetable?
             </p>
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setDeletingExam(null)}
-                className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                className="w-full sm:w-auto px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition text-center"
               >
                 Cancel
               </button>
@@ -1122,7 +1212,7 @@ export default function TimetableDetailPage({ params }) {
                 type="button"
                 onClick={confirmDelete}
                 disabled={submitting}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold transition shadow-xs"
+                className="w-full sm:w-auto px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold transition shadow-xs text-center"
               >
                 {submitting ? "Removing..." : "Yes, Remove Paper"}
               </button>

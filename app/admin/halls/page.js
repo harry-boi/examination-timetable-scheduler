@@ -175,7 +175,7 @@ export default function HallsPage() {
       )}
 
       {/* Add / Edit Form Card */}
-      <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
+      <div className="bg-white p-5 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
         <h2 className="text-base font-bold text-slate-900 mb-4 flex items-center space-x-2">
           <PlusIcon className="w-4 h-4 text-blue-900" />
           <span>{editingHall ? `Edit Hall: ${editingHall.name}` : "Add New Examination Hall"}</span>
@@ -191,7 +191,7 @@ export default function HallsPage() {
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Workshop 9, ETF Lecture Hall, Hall 1"
               required
-              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
             />
           </div>
 
@@ -205,16 +205,16 @@ export default function HallsPage() {
               value={capacity}
               onChange={(e) => setCapacity(e.target.value)}
               placeholder="e.g. 150 (or leave empty)"
-              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
             />
           </div>
 
-          <div className="sm:col-span-3 flex justify-end space-x-3 pt-2">
+          <div className="sm:col-span-3 flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3 pt-2">
             {editingHall && (
               <button
                 type="button"
                 onClick={cancelEdit}
-                className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                className="w-full sm:w-auto px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition text-center"
               >
                 Cancel
               </button>
@@ -222,7 +222,7 @@ export default function HallsPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-blue-300 text-white rounded-xl text-sm font-bold transition shadow-xs"
+              className="w-full sm:w-auto px-6 py-2.5 bg-blue-900 hover:bg-blue-800 disabled:bg-blue-300 text-white rounded-xl text-sm font-bold transition shadow-xs text-center"
             >
               {submitting ? "Saving..." : editingHall ? "Save Changes" : "Add Hall"}
             </button>
@@ -243,80 +243,120 @@ export default function HallsPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Filter halls..."
-              className="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-900"
+              className="w-full pl-9 pr-3 py-2 sm:py-1.5 border border-slate-300 rounded-xl sm:rounded-lg text-sm sm:text-xs focus:outline-none focus:ring-2 focus:ring-blue-900"
             />
           </div>
         </div>
 
         {loading ? (
-          <div className="p-10 text-center text-slate-500 text-sm">Loading halls...</div>
+          <div className="p-8 sm:p-10 text-center text-slate-500 text-sm">Loading halls...</div>
         ) : filteredHalls.length === 0 ? (
-          <div className="p-10 text-center text-slate-500 text-sm">
+          <div className="p-8 sm:p-10 text-center text-slate-500 text-sm">
             {searchTerm ? `No halls matching "${searchTerm}".` : "No examination halls added yet."}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50/70 text-slate-600 font-bold text-left text-xs uppercase tracking-wider">
-                <tr>
-                  <th className="px-6 py-3.5">Hall Name</th>
-                  <th className="px-6 py-3.5">Capacity Limit</th>
-                  <th className="px-6 py-3.5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredHalls.map((hall) => (
-                  <tr key={hall.id} className="hover:bg-slate-50/80 transition">
-                    <td className="px-6 py-4 font-bold text-slate-900 text-base">{hall.name}</td>
-                    <td className="px-6 py-4">
-                      {hall.capacity ? (
-                        <span className="inline-flex items-center space-x-1 px-3 py-1 bg-purple-50 text-purple-900 border border-purple-200/70 rounded-md font-mono font-bold text-xs">
-                          <span>{hall.capacity} seats</span>
-                        </span>
-                      ) : (
-                        <span className="text-slate-400 italic text-xs">
-                          Unrestricted (default max classes rule applies)
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={() => startEdit(hall)}
-                        className="inline-flex items-center space-x-1 px-3 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold transition"
-                      >
-                        <EditIcon className="w-3.5 h-3.5" />
-                        <span>Edit</span>
-                      </button>
-                      <button
-                        onClick={() => setDeletingHall(hall)}
-                        className="inline-flex items-center space-x-1 px-3 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-semibold transition"
-                      >
-                        <TrashIcon className="w-3.5 h-3.5" />
-                        <span>Delete</span>
-                      </button>
-                    </td>
+          <>
+            {/* Mobile Cards View */}
+            <div className="block md:hidden divide-y divide-slate-100">
+              {filteredHalls.map((hall) => (
+                <div key={hall.id} className="p-4 sm:p-5 space-y-3 hover:bg-slate-50/70 transition">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-bold text-slate-900 text-base">{hall.name}</h3>
+                    {hall.capacity ? (
+                      <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 bg-purple-50 text-purple-900 border border-purple-200/70 rounded-md font-mono font-bold text-xs">
+                        <span>{hall.capacity} seats</span>
+                      </span>
+                    ) : (
+                      <span className="text-slate-400 italic text-[11px]">
+                        Unrestricted capacity
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                    <button
+                      onClick={() => startEdit(hall)}
+                      className="flex-1 inline-flex items-center justify-center space-x-1.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition"
+                    >
+                      <EditIcon className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => setDeletingHall(hall)}
+                      className="flex-1 inline-flex items-center justify-center space-x-1.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold transition"
+                    >
+                      <TrashIcon className="w-3.5 h-3.5" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50/70 text-slate-600 font-bold text-left text-xs uppercase tracking-wider">
+                  <tr>
+                    <th className="px-6 py-3.5">Hall Name</th>
+                    <th className="px-6 py-3.5">Capacity Limit</th>
+                    <th className="px-6 py-3.5 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredHalls.map((hall) => (
+                    <tr key={hall.id} className="hover:bg-slate-50/80 transition">
+                      <td className="px-6 py-4 font-bold text-slate-900 text-base">{hall.name}</td>
+                      <td className="px-6 py-4">
+                        {hall.capacity ? (
+                          <span className="inline-flex items-center space-x-1 px-3 py-1 bg-purple-50 text-purple-900 border border-purple-200/70 rounded-md font-mono font-bold text-xs">
+                            <span>{hall.capacity} seats</span>
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 italic text-xs">
+                            Unrestricted (default max classes rule applies)
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right space-x-2">
+                        <button
+                          onClick={() => startEdit(hall)}
+                          className="inline-flex items-center space-x-1 px-3 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold transition"
+                        >
+                          <EditIcon className="w-3.5 h-3.5" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          onClick={() => setDeletingHall(hall)}
+                          className="inline-flex items-center space-x-1 px-3 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-semibold transition"
+                        >
+                          <TrashIcon className="w-3.5 h-3.5" />
+                          <span>Delete</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
       {/* Delete Confirmation Modal */}
       {deletingHall && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
             <h3 className="text-lg font-bold text-slate-900">Confirm Deletion</h3>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
               Are you sure you want to delete hall{" "}
               <strong className="text-slate-900 font-semibold">"{deletingHall.name}"</strong>?
             </p>
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setDeletingHall(null)}
-                className="px-4 py-2 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                className="w-full sm:w-auto px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition text-center"
               >
                 Cancel
               </button>
@@ -324,7 +364,7 @@ export default function HallsPage() {
                 type="button"
                 onClick={confirmDelete}
                 disabled={submitting}
-                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold transition shadow-xs"
+                className="w-full sm:w-auto px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-bold transition shadow-xs text-center"
               >
                 {submitting ? "Deleting..." : "Yes, Delete Hall"}
               </button>
