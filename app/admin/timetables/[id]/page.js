@@ -57,6 +57,7 @@ export default function TimetableDetailPage({ params }) {
   const [suggestEndDate, setSuggestEndDate] = useState("");
   const [suggestDistributionMode, setSuggestDistributionMode] = useState("SPREAD"); // "SPREAD" or "BALANCED_DAILY"
   const [suggestMinGapDays, setSuggestMinGapDays] = useState(1); // 1 or 2 or 0
+  const [suggestSessionMode, setSuggestSessionMode] = useState("BALANCED"); // "BALANCED", "MORNING_ONLY", "AFTERNOON_ONLY"
   const [suggestPeriods, setSuggestPeriods] = useState([
     { start: "09:00", end: "12:00" }, // Morning period
     { start: "13:00", end: "16:00" }, // Afternoon period
@@ -488,9 +489,26 @@ export default function TimetableDetailPage({ params }) {
 
           for (let pIdx = 0; pIdx < suggestPeriods.length; pIdx++) {
             const period = suggestPeriods[pIdx];
-            const periodPenalty = pIdx * 10;
+
+            // Session filter if specifically selected
+            if (suggestSessionMode === "MORNING_ONLY" && period.start !== "09:00") continue;
+            if (suggestSessionMode === "AFTERNOON_ONLY" && period.start !== "13:00") continue;
+
+            // Session balance penalty: balance morning and afternoon naturally
+            const totalInPeriod = runningSchedule.filter((e) => e.start_time === period.start).length;
+            const periodPenalty = suggestSessionMode === "BALANCED" ? totalInPeriod * 350 : 0;
 
             for (const h of halls) {
+              // Multi-hall load balancing penalty:
+              // 1. Overall assignments across timetable (rotates halls evenly)
+              const hallTotalCount = runningSchedule.filter((e) => e.hall_id === h.id).length;
+              // 2. Slot contention on same date/time (prefers opening an empty hall over cramming an already occupied hall)
+              const hallSlotCount = runningSchedule.filter(
+                (e) => e.hall_id === h.id && e.date === d && e.start_time === period.start
+              ).length;
+
+              const hallPenalty = (hallTotalCount * 400) + (hallSlotCount * 3000);
+
               const candidate = {
                 id: `suggest-${crs.id}`,
                 course_id: crs.id,
@@ -518,7 +536,7 @@ export default function TimetableDetailPage({ params }) {
               );
 
               if (!hasConflict) {
-                const totalScore = gapPenalty + loadPenalty + spreadPenalty + periodPenalty;
+                const totalScore = gapPenalty + loadPenalty + spreadPenalty + periodPenalty + hallPenalty;
                 if (totalScore < lowestPenalty) {
                   lowestPenalty = totalScore;
                   bestCandidate = candidate;
@@ -1299,6 +1317,33 @@ export default function TimetableDetailPage({ params }) {
                   <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
                     &bull; <strong>Max 1 exam per class per day</strong> is strictly guaranteed to prevent student fatigue.
                   </p>
+                </div>
+              </div>
+
+              {/* Session Preference & Multi-Hall Optimization */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Session / Period Preference
+                  </label>
+                  <select
+                    value={suggestSessionMode}
+                    onChange={(e) => setSuggestSessionMode(e.target.value)}
+                    className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-base sm:text-sm bg-white font-medium focus:outline-none focus:ring-2 focus:ring-blue-900/80 transition"
+                  >
+                    <option value="BALANCED">☀️ &amp; 🌤️ Balanced (Alternate Morning &amp; Afternoon)</option>
+                    <option value="MORNING_ONLY">☀️ Morning Papers Only (9:00 AM – 12:00 PM)</option>
+                    <option value="AFTERNOON_ONLY">🌤️ Afternoon Papers Only (1:00 PM – 4:00 PM)</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col justify-end">
+                  <div className="p-3 bg-purple-50/70 border border-purple-200/80 rounded-xl text-xs text-purple-950">
+                    <span className="font-bold block">🏛️ Multi-Hall Load Balancing:</span>
+                    <span className="text-[11px] text-purple-900">
+                      Evenly rotates allocations across all {halls.length} configured halls ({halls.map((h) => h.name).slice(0, 3).join(", ")}{halls.length > 3 ? "..." : ""}).
+                    </span>
+                  </div>
                 </div>
               </div>
 
