@@ -34,22 +34,26 @@ body {
   background: #94a3b8;
 }
 
-/* Optimized Print Styling */
+/* Optimized Print Styling - Official Polytechnic Landscape Format */
 @media print {
   @page {
-    size: A4 portrait;
-    margin: 1.5cm 1cm;
+    size: A4 landscape;
+    margin: 6mm 8mm;
   }
   body {
     background: #ffffff !important;
     color: #000000 !important;
-    font-size: 11pt;
+    font-size: 10pt;
   }
   .print\:hidden {
     display: none !important;
   }
+  .official-timetable-container {
+    width: 100% !important;
+  }
   table {
     page-break-inside: auto;
+    width: 100% !important;
   }
   tr {
     page-break-inside: avoid;
@@ -57,5 +61,8 @@ body {
   }
   thead {
     display: table-header-group;
+  }
+  tfoot {
+    display: table-footer-group;
   }
 }

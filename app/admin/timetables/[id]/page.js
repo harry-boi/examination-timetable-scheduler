@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { checkAllConflicts } from "@/lib/conflicts";
 import { getExamPeriod, formatPeriodRange } from "@/lib/timeUtils";
+import OfficialTimetableGrid from "@/components/OfficialTimetableGrid";
 import {
   CalendarIcon,
   ClockIcon,
@@ -36,6 +37,7 @@ export default function TimetableDetailPage({ params }) {
   const [filterHall, setFilterHall] = useState("ALL");
   const [filterClass, setFilterClass] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState("GRID"); // "GRID" (Official Timetable Layout) or "LIST" (Manage & Edit)
 
   // Form states
   const [showModal, setShowModal] = useState(false);
@@ -605,6 +607,14 @@ export default function TimetableDetailPage({ params }) {
     window.print();
   };
 
+  const filterLabel = [
+    filterHall !== "ALL" ? `Hall: ${halls.find((h) => h.id === filterHall)?.name}` : null,
+    filterClass !== "ALL" ? `Class: ${filterClass}` : null,
+    searchQuery.trim() ? `Search: "${searchQuery}"` : null,
+  ]
+    .filter(Boolean)
+    .join(" • ");
+
   if (loading) {
     return <div className="p-12 text-center text-slate-500 text-sm">Loading timetable builder...</div>;
   }
@@ -702,46 +712,50 @@ export default function TimetableDetailPage({ params }) {
         </div>
       )}
 
-      {/* Official Printable Header (Visible ONLY on print) */}
-      <div className="hidden print:block text-center pb-6 border-b-2 border-slate-900 mb-6 space-y-1.5">
-        <div className="inline-flex justify-center mb-1">
-          <PolyLogo className="w-12 h-12" />
-        </div>
-        <h2 className="text-2xl font-black uppercase text-slate-900 tracking-wide">
-          Akwa Ibom State Polytechnic
-        </h2>
-        <p className="text-sm font-bold uppercase text-slate-700">
-          Ikot Osurua, Ikot Ekpene, Akwa Ibom State
-        </p>
-        <p className="text-xs uppercase text-slate-600 font-semibold tracking-wider">
-          Time Table and Class Allocation Committee &bull; Directorate of Academic Affairs
-        </p>
-        <div className="pt-2">
-          <h3 className="text-lg font-black text-black">
-            {timetable?.title}
-          </h3>
-          <p className="text-sm font-bold text-slate-800">
-            Academic Session: {timetable?.session} &bull; {timetable?.semester}
-            {filterHall !== "ALL" && ` • Hall Filter: ${halls.find(h => h.id === filterHall)?.name}`}
-            {filterClass !== "ALL" && ` • Class Filter: ${filterClass}`}
-          </p>
-        </div>
-      </div>
-
       {/* Timetable Table Card */}
       <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden print:border-none print:shadow-none">
         {/* Table Toolbar & View Filter (Hidden on print) */}
         <div className="p-5 sm:p-6 border-b border-slate-200/90 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 print:hidden">
-          <div className="flex items-center space-x-3">
-            <h2 className="font-bold text-slate-900 text-base">
-              Scheduled Papers ({displayedExams.length}{displayedExams.length !== exams.length ? ` of ${exams.length}` : ""})
-            </h2>
-            {activeConflicts.length === 0 && exams.length > 0 && (
-              <span className="inline-flex items-center space-x-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200/80 rounded-full text-xs font-bold">
-                <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Conflict-Free</span>
-              </span>
-            )}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-center space-x-3">
+              <h2 className="font-bold text-slate-900 text-base">
+                Scheduled Papers ({displayedExams.length}{displayedExams.length !== exams.length ? ` of ${exams.length}` : ""})
+              </h2>
+              {activeConflicts.length === 0 && exams.length > 0 && (
+                <span className="inline-flex items-center space-x-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200/80 rounded-full text-xs font-bold">
+                  <CheckCircleIcon className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Conflict-Free</span>
+                </span>
+              )}
+            </div>
+
+            {/* View Mode Toggle: Official Landscape Grid vs Interactive Management List */}
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setViewMode("GRID")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 ${
+                  viewMode === "GRID"
+                    ? "bg-white text-blue-950 shadow-2xs border border-slate-200"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <span>🏛️ Official Grid</span>
+                <span className="hidden sm:inline text-[11px] font-normal text-slate-500">(Print Preview)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("LIST")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 ${
+                  viewMode === "LIST"
+                    ? "bg-white text-blue-950 shadow-2xs border border-slate-200"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <span>📋 Manage List</span>
+                <span className="hidden sm:inline text-[11px] font-normal text-slate-500">(Edit / Delete)</span>
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full lg:w-auto lg:flex lg:items-center">
@@ -800,204 +814,218 @@ export default function TimetableDetailPage({ params }) {
           </div>
         ) : (
           <>
-            {/* Mobile Cards View (Visible on screens < 768px, hidden on desktop and print) */}
-            <div className="block md:hidden divide-y divide-slate-100 print:hidden">
-              {displayedExams.map((item) => {
-                const isConflicting = conflictingExamIds.has(item.id);
-                const deptCode = item.courses?.classes?.departments?.code || "DEPT";
-                const level = item.courses?.classes?.level || "";
-                const className = `${deptCode} ${level}`;
-                const period = getExamPeriod(item.start_time);
-                const time12 = formatPeriodRange(item.start_time, item.end_time);
+            {/* View Mode 1: Official Polytechnic Landscape Grid View */}
+            {viewMode === "GRID" && (
+              <div className="p-4 sm:p-6 lg:p-8">
+                <OfficialTimetableGrid
+                  exams={displayedExams}
+                  timetable={timetable}
+                  filterLabel={filterLabel}
+                  showSignOff={true}
+                />
+              </div>
+            )}
 
-                return (
-                  <div
-                    key={item.id}
-                    className={`p-4 sm:p-5 space-y-3 transition-colors ${
-                      isConflicting ? "bg-rose-50/70 border-l-4 border-rose-600" : "hover:bg-slate-50/60"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <span className="font-mono font-black text-blue-900 text-base">
-                            {item.courses?.code}
-                          </span>
-                          <span className="px-2 py-0.5 bg-slate-100 text-slate-800 rounded-md font-bold text-xs">
-                            {className}
-                          </span>
-                        </div>
-                        <h4 className="text-sm font-semibold text-slate-900 mt-1">
-                          {item.courses?.title}
-                        </h4>
-                      </div>
-                      {isConflicting && (
-                        <span className="shrink-0 inline-flex items-center space-x-1 text-[10px] font-black uppercase text-rose-700 bg-rose-100/90 px-2 py-0.5 rounded">
-                          <span>⚠️ Conflict</span>
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-xs pt-1">
-                      <div className="p-2.5 bg-slate-50/80 rounded-xl space-y-1">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Date &amp; Time</span>
-                        <div className="font-bold text-slate-900 flex items-center space-x-1">
-                          <CalendarIcon className="w-3.5 h-3.5 text-blue-900 shrink-0" />
-                          <span>{item.exam_date}</span>
-                        </div>
-                        <div className="flex items-center space-x-1.5 pt-0.5">
-                          <span className={`inline-flex items-center space-x-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded ${period.badgeClass}`}>
-                            <span>{period.icon}</span>
-                            <span>{period.name}</span>
-                          </span>
-                          <span className="font-mono font-bold text-slate-800 text-[11px]">{time12}</span>
-                        </div>
-                      </div>
-
-                      <div className="p-2.5 bg-slate-50/80 rounded-xl space-y-1">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Venue &amp; Students</span>
-                        <div className="font-bold text-slate-900 flex items-center space-x-1 truncate">
-                          <BuildingIcon className="w-3.5 h-3.5 text-purple-700 shrink-0" />
-                          <span className="truncate">{item.halls?.name}</span>
-                        </div>
-                        <div className="text-[11px] text-slate-600 font-medium">
-                          Headcount: <span className="font-mono font-bold text-slate-900">{item.courses?.classes?.student_count || 0}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-                      <button
-                        onClick={() => openEditModal(item)}
-                        className="flex-1 inline-flex items-center justify-center space-x-1.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition"
-                      >
-                        <EditIcon className="w-3.5 h-3.5" />
-                        <span>Edit Entry</span>
-                      </button>
-                      <button
-                        onClick={() => setDeletingExam(item)}
-                        className="flex-1 inline-flex items-center justify-center space-x-1.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold transition"
-                      >
-                        <TrashIcon className="w-3.5 h-3.5" />
-                        <span>Delete</span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Desktop & Print Table View */}
-            <div className="hidden md:block print:block overflow-x-auto">
-              <table className="min-w-full divide-y divide-slate-200 text-sm print:text-xs border border-slate-300">
-                <thead className="bg-slate-50/70 text-slate-600 font-bold text-left text-xs uppercase tracking-wider print:bg-slate-200 print:text-black">
-                  <tr>
-                    <th className="px-4 py-3 border border-slate-300">Date</th>
-                    <th className="px-4 py-3 border border-slate-300">Period (Time)</th>
-                    <th className="px-4 py-3 border border-slate-300">Course Code</th>
-                    <th className="px-4 py-3 border border-slate-300">Course Title</th>
-                    <th className="px-4 py-3 border border-slate-300">Offering Class</th>
-                    <th className="px-4 py-3 border border-slate-300">Hall Venue</th>
-                    <th className="px-4 py-3 border border-slate-300 text-center">Students</th>
-                    <th className="px-4 py-3 text-right print:hidden">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {displayedExams.map((item, idx) => {
+            {/* View Mode 2: Interactive Manage & Edit List View */}
+            {viewMode === "LIST" && (
+              <>
+                {/* Mobile Cards View (Hidden on desktop and print) */}
+                <div className="block md:hidden divide-y divide-slate-100 print:hidden">
+                  {displayedExams.map((item) => {
                     const isConflicting = conflictingExamIds.has(item.id);
                     const deptCode = item.courses?.classes?.departments?.code || "DEPT";
                     const level = item.courses?.classes?.level || "";
                     const className = `${deptCode} ${level}`;
+                    const period = getExamPeriod(item.start_time);
+                    const time12 = formatPeriodRange(item.start_time, item.end_time);
 
                     return (
-                      <tr
+                      <div
                         key={item.id}
-                        className={`transition-colors ${
-                          isConflicting
-                            ? "bg-rose-50/70 hover:bg-rose-100/60 border-l-4 border-rose-600 print:border-l-0"
-                            : idx % 2 === 0 ? "bg-white" : "bg-slate-50/40"
+                        className={`p-4 sm:p-5 space-y-3 transition-colors ${
+                          isConflicting ? "bg-rose-50/70 border-l-4 border-rose-600" : "hover:bg-slate-50/60"
                         }`}
                       >
-                        <td className="px-4 py-3 whitespace-nowrap border border-slate-300">
-                          <div className="font-bold text-slate-900">{item.exam_date}</div>
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <span className="font-mono font-black text-blue-900 text-base">
+                                {item.courses?.code}
+                              </span>
+                              <span className="px-2 py-0.5 bg-slate-100 text-slate-800 rounded-md font-bold text-xs">
+                                {className}
+                              </span>
+                            </div>
+                            <h4 className="text-sm font-semibold text-slate-900 mt-1">
+                              {item.courses?.title}
+                            </h4>
+                          </div>
                           {isConflicting && (
-                            <span className="inline-flex items-center space-x-1 text-[10px] font-black uppercase text-rose-700 bg-rose-100/90 px-1.5 py-0.5 rounded mt-1 print:hidden">
+                            <span className="shrink-0 inline-flex items-center space-x-1 text-[10px] font-black uppercase text-rose-700 bg-rose-100/90 px-2 py-0.5 rounded">
                               <span>⚠️ Conflict</span>
                             </span>
                           )}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap border border-slate-300">
-                          {(() => {
-                            const period = getExamPeriod(item.start_time);
-                            const time12 = formatPeriodRange(item.start_time, item.end_time);
-                            return (
-                              <div className="space-y-1">
-                                <span className={`inline-flex items-center space-x-1 text-[11px] font-bold px-2 py-0.5 rounded-md ${period.badgeClass}`}>
-                                  <span>{period.icon}</span>
-                                  <span>{period.name}</span>
-                                </span>
-                                <div className="font-mono text-xs font-bold text-slate-800">
-                                  {time12}
-                                </div>
-                                <div className="text-[10px] text-slate-400 font-mono print:hidden">
-                                  {item.start_time?.slice(0, 5)} &ndash; {item.end_time?.slice(0, 5)}
-                                </div>
-                              </div>
-                            );
-                          })()}
-                        </td>
-                        <td className="px-4 py-3 font-mono font-black text-blue-900 print:text-black whitespace-nowrap border border-slate-300">
-                          {item.courses?.code}
-                        </td>
-                        <td className="px-4 py-3 text-slate-800 font-medium border border-slate-300">
-                          {item.courses?.title}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap border border-slate-300">
-                          <span className="px-2 py-0.5 bg-slate-100 print:bg-transparent text-slate-800 rounded font-bold text-xs">
-                            {className}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap font-bold text-slate-900 border border-slate-300">
-                          {item.halls?.name}
-                        </td>
-                        <td className="px-4 py-3 font-mono font-bold text-slate-800 text-center border border-slate-300">
-                          {item.courses?.classes?.student_count || 0}
-                        </td>
-                        <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap print:hidden">
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                          <div className="p-2.5 bg-slate-50/80 rounded-xl space-y-1">
+                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Date &amp; Time</span>
+                            <div className="font-bold text-slate-900 flex items-center space-x-1">
+                              <CalendarIcon className="w-3.5 h-3.5 text-blue-900 shrink-0" />
+                              <span>{item.exam_date}</span>
+                            </div>
+                            <div className="flex items-center space-x-1.5 pt-0.5">
+                              <span className={`inline-flex items-center space-x-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded ${period.badgeClass}`}>
+                                <span>{period.icon}</span>
+                                <span>{period.name}</span>
+                              </span>
+                              <span className="font-mono font-bold text-slate-800 text-[11px]">{time12}</span>
+                            </div>
+                          </div>
+
+                          <div className="p-2.5 bg-slate-50/80 rounded-xl space-y-1">
+                            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Venue &amp; Students</span>
+                            <div className="font-bold text-slate-900 flex items-center space-x-1 truncate">
+                              <BuildingIcon className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                              <span className="truncate">{item.halls?.name}</span>
+                            </div>
+                            <div className="text-[11px] text-slate-600 font-medium">
+                              Headcount: <span className="font-mono font-bold text-slate-900">{item.courses?.classes?.student_count || 0}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
                           <button
                             onClick={() => openEditModal(item)}
-                            className="inline-flex items-center space-x-1 px-3 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold transition"
+                            className="flex-1 inline-flex items-center justify-center space-x-1.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition"
                           >
                             <EditIcon className="w-3.5 h-3.5" />
-                            <span>Edit</span>
+                            <span>Edit Entry</span>
                           </button>
                           <button
                             onClick={() => setDeletingExam(item)}
-                            className="inline-flex items-center space-x-1 px-3 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-semibold transition"
+                            className="flex-1 inline-flex items-center justify-center space-x-1.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold transition"
                           >
                             <TrashIcon className="w-3.5 h-3.5" />
                             <span>Delete</span>
                           </button>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
+                </div>
 
-              {/* Official Print Footer / Committee Endorsements (Visible ONLY on print) */}
-              <div className="hidden print:flex justify-between items-end mt-12 pt-6 text-xs text-slate-700 border-t border-slate-400">
-                <div className="text-left space-y-1">
-                  <p className="font-bold">Important Instructions for Hall Invigilators:</p>
-                  <p>1. Invigilators must ensure admission of authorized students only matching their enrolled class list.</p>
-                  <p>2. Report any venue seating capacity irregularities directly to the committee secretariat.</p>
+                {/* Desktop Manage Table View (Hidden on print) */}
+                <div className="hidden md:block print:hidden overflow-x-auto">
+                  <table className="min-w-full divide-y divide-slate-200 text-sm border border-slate-300">
+                    <thead className="bg-slate-50/70 text-slate-600 font-bold text-left text-xs uppercase tracking-wider">
+                      <tr>
+                        <th className="px-4 py-3 border border-slate-300">Date</th>
+                        <th className="px-4 py-3 border border-slate-300">Period (Time)</th>
+                        <th className="px-4 py-3 border border-slate-300">Course Code</th>
+                        <th className="px-4 py-3 border border-slate-300">Course Title</th>
+                        <th className="px-4 py-3 border border-slate-300">Offering Class</th>
+                        <th className="px-4 py-3 border border-slate-300">Hall Venue</th>
+                        <th className="px-4 py-3 border border-slate-300 text-center">Students</th>
+                        <th className="px-4 py-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {displayedExams.map((item, idx) => {
+                        const isConflicting = conflictingExamIds.has(item.id);
+                        const deptCode = item.courses?.classes?.departments?.code || "DEPT";
+                        const level = item.courses?.classes?.level || "";
+                        const className = `${deptCode} ${level}`;
+
+                        return (
+                          <tr
+                            key={item.id}
+                            className={`transition-colors ${
+                              isConflicting
+                                ? "bg-rose-50/70 hover:bg-rose-100/60 border-l-4 border-rose-600"
+                                : idx % 2 === 0 ? "bg-white" : "bg-slate-50/40"
+                            }`}
+                          >
+                            <td className="px-4 py-3 whitespace-nowrap border border-slate-300">
+                              <div className="font-bold text-slate-900">{item.exam_date}</div>
+                              {isConflicting && (
+                                <span className="inline-flex items-center space-x-1 text-[10px] font-black uppercase text-rose-700 bg-rose-100/90 px-1.5 py-0.5 rounded mt-1">
+                                  <span>⚠️ Conflict</span>
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap border border-slate-300">
+                              {(() => {
+                                const period = getExamPeriod(item.start_time);
+                                const time12 = formatPeriodRange(item.start_time, item.end_time);
+                                return (
+                                  <div className="space-y-1">
+                                    <span className={`inline-flex items-center space-x-1 text-[11px] font-bold px-2 py-0.5 rounded-md ${period.badgeClass}`}>
+                                      <span>{period.icon}</span>
+                                      <span>{period.name}</span>
+                                    </span>
+                                    <div className="font-mono text-xs font-bold text-slate-800">
+                                      {time12}
+                                    </div>
+                                    <div className="text-[10px] text-slate-400 font-mono">
+                                      {item.start_time?.slice(0, 5)} &ndash; {item.end_time?.slice(0, 5)}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+                            </td>
+                            <td className="px-4 py-3 font-mono font-black text-blue-900 whitespace-nowrap border border-slate-300">
+                              {item.courses?.code}
+                            </td>
+                            <td className="px-4 py-3 text-slate-800 font-medium border border-slate-300">
+                              {item.courses?.title}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap border border-slate-300">
+                              <span className="px-2 py-0.5 bg-slate-100 text-slate-800 rounded font-bold text-xs">
+                                {className}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap font-bold text-slate-900 border border-slate-300">
+                              {item.halls?.name}
+                            </td>
+                            <td className="px-4 py-3 font-mono font-bold text-slate-800 text-center border border-slate-300">
+                              {item.courses?.classes?.student_count || 0}
+                            </td>
+                            <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                              <button
+                                onClick={() => openEditModal(item)}
+                                className="inline-flex items-center space-x-1 px-3 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-semibold transition"
+                              >
+                                <EditIcon className="w-3.5 h-3.5" />
+                                <span>Edit</span>
+                              </button>
+                              <button
+                                onClick={() => setDeletingExam(item)}
+                                className="inline-flex items-center space-x-1 px-3 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-semibold transition"
+                              >
+                                <TrashIcon className="w-3.5 h-3.5" />
+                                <span>Delete</span>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-                <div className="text-right space-y-10">
-                  <div>___________________________________________________</div>
-                  <div className="font-bold">Chairman, Time Table &amp; Class Allocation Committee</div>
+
+                {/* Print Layout when in List Mode: ALWAYS prints the official polytechnic grid */}
+                <div className="hidden print:block p-2">
+                  <OfficialTimetableGrid
+                    exams={displayedExams}
+                    timetable={timetable}
+                    filterLabel={filterLabel}
+                    showSignOff={true}
+                  />
                 </div>
-              </div>
-            </div>
+              </>
+            )}
           </>
         )}
       </div>
