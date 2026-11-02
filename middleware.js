@@ -15,7 +15,7 @@ export async function middleware(request) {
   if (!supabaseUrl || !supabaseKey || supabaseUrl === "your-project-url") {
     if (request.nextUrl.pathname.startsWith("/admin")) {
       const url = request.nextUrl.clone();
-      url.pathname = "/login";
+      url.pathname = "/";
       return NextResponse.redirect(url);
     }
     return response;
@@ -42,18 +42,25 @@ export async function middleware(request) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect /admin routes
+  // Protect /admin routes: unauthenticated users redirect to front page (/)
   if (request.nextUrl.pathname.startsWith("/admin") && !user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = "/";
     url.searchParams.set("redirectedFrom", request.nextUrl.pathname);
     return NextResponse.redirect(url);
   }
 
-  // If already logged in, redirect /login to /admin
-  if (request.nextUrl.pathname === "/login" && user) {
+  // If already logged in, redirect root (/) and /login to /admin dashboard
+  if ((request.nextUrl.pathname === "/" || request.nextUrl.pathname === "/login") && user) {
     const url = request.nextUrl.clone();
     url.pathname = "/admin";
+    return NextResponse.redirect(url);
+  }
+
+  // Redirect /login directly to canonical root login page (/) for unauthenticated users
+  if (request.nextUrl.pathname === "/login" && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
     return NextResponse.redirect(url);
   }
 

@@ -41,7 +41,7 @@ export default function HeaderAuth() {
     try {
       const supabase = createClient();
       await supabase.auth.signOut();
-      router.push("/login");
+      router.push("/");
       router.refresh();
     } catch (err) {
       console.error("Sign out failed", err);
@@ -88,7 +88,7 @@ export default function HeaderAuth() {
 
   return (
     <Link
-      href="/admin"
+      href="/"
       className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-blue-900 hover:bg-blue-800 text-white shadow-sm hover:shadow transition"
     >
       <ShieldCheckIcon className="w-4 h-4 text-amber-400" />

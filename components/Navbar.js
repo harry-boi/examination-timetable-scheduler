@@ -44,7 +44,7 @@ export default function Navbar() {
     try {
       const supabase = createClient();
       await supabase.auth.signOut();
-      window.location.href = "/login";
+      window.location.href = "/";
     } catch (err) {
       console.error("Sign out failed", err);
     }
@@ -70,16 +70,6 @@ export default function Navbar() {
           {/* Desktop Navigation Links */}
           <nav className="hidden md:flex items-center space-x-2 lg:space-x-4">
             <Link
-              href="/"
-              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition ${
-                pathname === "/"
-                  ? "bg-slate-100 text-blue-950 font-bold"
-                  : "text-slate-600 hover:text-blue-900 hover:bg-slate-50"
-              }`}
-            >
-              Home
-            </Link>
-            <Link
               href="/timetables"
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition ${
                 pathname === "/timetables"
@@ -88,7 +78,7 @@ export default function Navbar() {
               }`}
             >
               <CalendarIcon className="w-4 h-4 text-blue-800" />
-              <span>Timetables</span>
+              <span>Notice Board Timetables</span>
             </Link>
             <HeaderAuth />
           </nav>
@@ -114,17 +104,6 @@ export default function Navbar() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-5 space-y-2 shadow-lg animate-in slide-in-from-top-2">
           <Link
-            href="/"
-            className={`block px-4 py-2.5 rounded-xl text-sm font-bold transition ${
-              pathname === "/"
-                ? "bg-blue-50 text-blue-950 font-black"
-                : "text-slate-700 hover:bg-slate-50"
-            }`}
-          >
-            Home Overview
-          </Link>
-
-          <Link
             href="/timetables"
             className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-bold transition ${
               pathname === "/timetables"
@@ -133,7 +112,7 @@ export default function Navbar() {
             }`}
           >
             <CalendarIcon className="w-4 h-4 text-blue-800" />
-            <span>Student &amp; Notice Board Timetables</span>
+            <span>Notice Board Timetables</span>
           </Link>
 
           {user ? (
@@ -163,7 +142,7 @@ export default function Navbar() {
           ) : (
             <div className="pt-2 border-t border-slate-100">
               <Link
-                href="/admin"
+                href="/"
                 className="flex items-center justify-center space-x-2 w-full px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-900 text-white shadow-xs"
               >
                 <ShieldCheckIcon className="w-4 h-4 text-amber-300" />
